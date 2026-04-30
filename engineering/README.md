@@ -1,4 +1,4 @@
-# AppSec Research Skills
+# Engineering Research Skills
 
 A set of seven [Agent Skills](https://agentskills.io/specification) that automate the **Iterative Engineering Research Methodology**. The skills cover the entire lifecycle of a research project — from initial brief creation to the final report — while keeping the researcher in full control of every substantive decision.
 
