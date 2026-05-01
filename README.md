@@ -8,12 +8,13 @@ A set of AI agent skills designed to solve research and development tasks.
 
 General-purpose research and ideation skills.
 
-| Skill                                                | Description                                                                                                                                          |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**explore**](research/explore/SKILL.md)             | Enter explore mode — a thinking partner for exploring ideas, investigating problems, and clarifying requirements before implementation.              |
-| [**scamper**](research/scamper/SKILL.md)             | Transform existing ideas into improved variants using the SCAMPER method (Substitute, Combine, Adapt, Modify, Put to other use, Eliminate, Reverse). |
-| [**triz-solver**](research/triz-solver/SKILL.md)     | Solve inventive engineering, product, process, or system-design problems using TRIZ methodology and contradiction resolution.                        |
-| [**vibe-research**](research/vibe-research/SKILL.md) | Iterative research copilot for exploratory "vibe research" — progressively sharpens broad topics into high-value lines of inquiry.                   |
+| Skill                                                    | Description                                                                                                                                                                |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**deeper-research**](research/deeper-research/SKILL.md) | Conduct thorough, multi-source research using Tree of Thoughts methodology. Produces cited, multi-perspective syntheses with confidence ratings and evidentiary hierarchy. |
+| [**explore**](research/explore/SKILL.md)                 | Enter explore mode — a thinking partner for exploring ideas, investigating problems, and clarifying requirements before implementation.                                    |
+| [**scamper**](research/scamper/SKILL.md)                 | Transform existing ideas into improved variants using the SCAMPER method (Substitute, Combine, Adapt, Modify, Put to other use, Eliminate, Reverse).                       |
+| [**triz-solver**](research/triz-solver/SKILL.md)         | Solve inventive engineering, product, process, or system-design problems using TRIZ methodology and contradiction resolution.                                              |
+| [**vibe-research**](research/vibe-research/SKILL.md)     | Iterative research copilot for exploratory "vibe research" — progressively sharpens broad topics into high-value lines of inquiry.                                         |
 
 ### Engineering Research
 
