@@ -30,6 +30,26 @@ Skills that automate the Iterative Engineering Research Methodology — from ini
 | [**research-synthesis**](engineering/research-synthesis/SKILL.md)   | Execute the synthesis phase: determine report mode, walk the hypothesis graph, and generate the final report.                |
 | [**research-status**](engineering/research-status/SKILL.md)         | Generate a comprehensive status overview of a research project.                                                              |
 
+### Agentic
+
+Skills for building and maintaining AI agent systems.
+
+| Skill                                                 | Description                                                                                                                                                          |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**prompts-review**](agentic/prompts-review/SKILL.md) | Review all prompts in a codebase for optimality, balancing effectiveness and token efficiency. Covers explicit, string-literal, and dynamically constructed prompts. |
+
+### Specification-Driven Development
+
+Skills that implement a Specification-Driven Development workflow — from bootstrapping a spec system to keeping specs aligned with code. See [sdd/README.md](sdd/README.md) for the full workflow.
+
+| Skill                                                 | Description                                                                                                                     |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| [**vibespec-init**](sdd/vibespec-init/SKILL.md)       | Initialize a specification system for a project from scratch by analyzing the codebase and generating the initial set of specs. |
+| [**vibespec-create**](sdd/vibespec-create/SKILL.md)   | Create a new specification document following the project's spec system templates and conventions.                              |
+| [**vibespec-consult**](sdd/vibespec-consult/SKILL.md) | Proactively consult project specifications before making structural changes to avoid violating documented invariants.           |
+| [**vibespec-update**](sdd/vibespec-update/SKILL.md)   | Update existing specification documents after code changes that alter documented behavior, interfaces, or invariants.           |
+| [**vibespec-check**](sdd/vibespec-check/SKILL.md)     | Detect discrepancies between project specifications and actual code, interactively resolving each finding with the user.        |
+
 ### Idiomatic Go
 
 Skills for writing idiomatic, correct, and performant Go code.
@@ -56,9 +76,9 @@ These skills can be installed using the Skills CLI from [skills.sh](https://skil
 
 ```bash
 # Install all skills collection
-npx skills add v0lka/skills --all
+npx skills add v0lka/skills --all --full-depth
 # Install a specific skill
-npx skills add v0lka/skills --skill <skill-name>
+npx skills add v0lka/skills --skill <skill-name> --full-depth
 ```
 
 ### Manual Usage
