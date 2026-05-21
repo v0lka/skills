@@ -30,18 +30,34 @@ Task Progress:
 
 Gather foundational information about the project.
 
-**Automated discovery** — run these in parallel:
+**Automated discovery** — run the reconnaissance script first, then supplement with manual checks:
 
-| What to find | Where to look |
-|---|---|
-| Language & framework | `package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`, `pom.xml`, `*.csproj`, file extensions |
-| Deployment model | `Dockerfile`, `docker-compose.yml`, `k8s/`, `serverless.yml`, `terraform/`, `.github/workflows/` |
-| API surface | OpenAPI specs, route definitions, gRPC proto files, GraphQL schemas |
-| Auth mechanism | Auth middleware, OAuth config, JWT libraries, session stores |
-| Data stores | DB drivers, ORM config, migration files, cache clients (Redis, Memcached) |
-| Existing security config | `.gitleaks.toml`, `.pre-commit-config.yaml`, `dependabot.yml`, `CODEOWNERS`, existing `SECURITY.md` |
+```bash
+# Run the bundled reconnaissance script from the skill directory
+bash scripts/recon.sh
+```
+
+This script automatically detects:
+
+- Language & framework (package files, source extensions)
+- Build tools & deployment indicators
+- Security configuration files
+- Dependency counts
+- Web frameworks, ORMs, auth libraries
+- Template engines, serialization libraries, HTTP clients
+- GraphQL libraries, cloud SDKs, CMS frameworks
+- Test frameworks
+- Dangerous code patterns (command execution, eval, deserialization, XXE)
+- Version/release information
+
+**Supplement the script output by checking:**
+
+| What to find       | Where to look                                                               |
+| ------------------ | --------------------------------------------------------------------------- |
+| API surface        | OpenAPI specs, route definitions, gRPC proto files, GraphQL schemas         |
+| Auth mechanism     | Auth middleware, OAuth config, JWT libraries, session stores                |
+| Data stores        | DB drivers, ORM config, migration files, cache clients (Redis, Memcached)   |
 | Agent instructions | `AGENTS.md`, `.github/copilot-instructions.md`, `.cursorrules`, `CLAUDE.md` |
-| Version/release strategy | Tags, CHANGELOG, release branches, CI release jobs |
 
 **Key questions to clarify with user** (use AskUserQuestion if available):
 
@@ -67,12 +83,12 @@ Determine what the project stores, processes, and transmits.
 
 **Classify assets by sensitivity:**
 
-| Sensitivity | Examples |
-|---|---|
-| Critical | Signing keys, DB master credentials, encryption keys, payment tokens |
-| High | User PII, session tokens, API keys, access logs with user context |
-| Medium | Application config, internal IPs, non-sensitive business data |
-| Low | Public content, marketing copy, open-source dependency list |
+| Sensitivity | Examples                                                             |
+| ----------- | -------------------------------------------------------------------- |
+| Critical    | Signing keys, DB master credentials, encryption keys, payment tokens |
+| High        | User PII, session tokens, API keys, access logs with user context    |
+| Medium      | Application config, internal IPs, non-sensitive business data        |
+| Low         | Public content, marketing copy, open-source dependency list          |
 
 ---
 
@@ -94,6 +110,7 @@ Identify every point where untrusted input enters the system.
 - [ ] Admin/debug endpoints (check if properly gated)
 
 **For each entry point, note:**
+
 - Input validation present? (type, length, format)
 - Authentication required?
 - Authorization granularity?
@@ -142,20 +159,21 @@ cargo audit 2>/dev/null || true
 
 Identify what security measures already exist. Look for:
 
-| Category | What to find |
-|---|---|
-| AuthN | Middleware enforcing authentication, token validation logic |
-| AuthZ | Role checks, permission guards, policy engines |
-| Input validation | Schema validation (zod, joi, pydantic), sanitization |
-| CSRF protection | Token generation/validation middleware |
-| Rate limiting | Rate limiter middleware, API gateway config |
-| Encryption | TLS config, field-level encryption, at-rest encryption |
-| Secret management | Vault integration, KMS usage, env-only secrets |
-| Logging & audit | Structured logging setup, audit trail implementation |
-| Security headers | Helmet.js, manual header setting, CSP |
-| Container security | Non-root user, minimal base image, read-only FS |
+| Category           | What to find                                                |
+| ------------------ | ----------------------------------------------------------- |
+| AuthN              | Middleware enforcing authentication, token validation logic |
+| AuthZ              | Role checks, permission guards, policy engines              |
+| Input validation   | Schema validation (zod, joi, pydantic), sanitization        |
+| CSRF protection    | Token generation/validation middleware                      |
+| Rate limiting      | Rate limiter middleware, API gateway config                 |
+| Encryption         | TLS config, field-level encryption, at-rest encryption      |
+| Secret management  | Vault integration, KMS usage, env-only secrets              |
+| Logging & audit    | Structured logging setup, audit trail implementation        |
+| Security headers   | Helmet.js, manual header setting, CSP                       |
+| Container security | Non-root user, minimal base image, read-only FS             |
 
 For each control found, note:
+
 - Where it's implemented (file + line)
 - Coverage (all routes? only some?)
 - Any gaps or inconsistencies
@@ -168,14 +186,14 @@ Based on the discovered tech stack, generate project-specific coding rules.
 
 **Language-specific rule selection:**
 
-| Stack | Key rules to emphasize |
-|---|---|
-| Node.js/TypeScript | Prototype pollution, ReDoS, event loop blocking, npm supply chain |
-| Go | Integer overflow, goroutine leaks, unsafe package usage, TOCTOU in file ops |
-| Python | Pickle deserialization, SSTI, subprocess injection, `yaml.safe_load` |
-| Rust | `unsafe` block justification, FFI boundary validation |
-| Java/Kotlin | Deserialization (Jackson/Gson config), JNDI injection, XML external entities |
-| React/Frontend | XSS via dangerouslySetInnerHTML, open redirects, token storage in localStorage |
+| Stack              | Key rules to emphasize                                                         |
+| ------------------ | ------------------------------------------------------------------------------ |
+| Node.js/TypeScript | Prototype pollution, ReDoS, event loop blocking, npm supply chain              |
+| Go                 | Integer overflow, goroutine leaks, unsafe package usage, TOCTOU in file ops    |
+| Python             | Pickle deserialization, SSTI, subprocess injection, `yaml.safe_load`           |
+| Rust               | `unsafe` block justification, FFI boundary validation                          |
+| Java/Kotlin        | Deserialization (Jackson/Gson config), JNDI injection, XML external entities   |
+| React/Frontend     | XSS via dangerouslySetInnerHTML, open redirects, token storage in localStorage |
 
 **Framework-specific rules:**
 
@@ -192,19 +210,19 @@ Use the template from [template.md](template.md) and fill in each section with d
 
 **Section-by-section guidance:**
 
-| Section | Source |
-|---|---|
-| Supported Versions | Git tags, CHANGELOG, CI release config |
-| Reporting a Vulnerability | User input (or infer from existing SECURITY.md / CONTRIBUTING.md) |
-| Assets | Step 2 output |
-| Threat Actors | Standard list, adjusted to project's exposure level |
-| Attack Surface | Step 3 output |
-| Trust Boundaries | Infer from architecture (edge → app → data layer) |
-| Known Risks | Findings from Steps 3-5 where no mitigation exists |
-| Security Architecture | Step 5 output |
-| Secure Coding Guidelines | Step 6 output |
-| Rules for AI Coding Agents | Derived from stack + project-specific patterns |
-| Security-Related Config Files | Files found in Step 1 |
+| Section                       | Source                                                            |
+| ----------------------------- | ----------------------------------------------------------------- |
+| Supported Versions            | Git tags, CHANGELOG, CI release config                            |
+| Reporting a Vulnerability     | User input (or infer from existing SECURITY.md / CONTRIBUTING.md) |
+| Assets                        | Step 2 output                                                     |
+| Threat Actors                 | Standard list, adjusted to project's exposure level               |
+| Attack Surface                | Step 3 output                                                     |
+| Trust Boundaries              | Infer from architecture (edge → app → data layer)                 |
+| Known Risks                   | Findings from Steps 3-5 where no mitigation exists                |
+| Security Architecture         | Step 5 output                                                     |
+| Secure Coding Guidelines      | Step 6 output                                                     |
+| Rules for AI Coding Agents    | Derived from stack + project-specific patterns                    |
+| Security-Related Config Files | Files found in Step 1                                             |
 
 **Writing rules:**
 
@@ -288,6 +306,7 @@ Save the generated SECURITY.md to the project root directory. If one already exi
 ## Tone and Audience
 
 The document will be read by:
+
 - Security researchers evaluating the project
 - New contributors learning project security standards
 - AI coding agents operating on the codebase
