@@ -50,6 +50,14 @@ Skills that implement a Specification-Driven Development workflow — from boots
 | [**vibespec-update**](sdd/vibespec-update/SKILL.md)   | Update existing specification documents after code changes that alter documented behavior, interfaces, or invariants.           |
 | [**vibespec-check**](sdd/vibespec-check/SKILL.md)     | Detect discrepancies between project specifications and actual code, interactively resolving each finding with the user.        |
 
+### Security
+
+Skills for security analysis and policy generation.
+
+| Skill                                                                   | Description                                                                                                                                              |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**security-policy-generator**](security/security-policy-generator/SKILL.md) | Analyze a project repository and generate a comprehensive SECURITY.md with threat model, security architecture, and secure coding guidelines. |
+
 ### Idiomatic Go
 
 Skills for writing idiomatic, correct, and performant Go code.
