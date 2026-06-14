@@ -58,6 +58,14 @@ Skills for security analysis and policy generation.
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**security-policy-generator**](security/security-policy-generator/SKILL.md) | Analyze a project repository and generate a comprehensive SECURITY.md with threat model, security architecture, and secure coding guidelines. |
 
+### Development
+
+Skills for writing secure, production-ready applications in specific languages and frameworks.
+
+| Skill                                                 | Description                                                                                                                                                                                                 |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**secure-go**](development/secure-go/SKILL.md)       | Write secure Go applications through everyday practices — idiomatic patterns, standard library defaults, OWASP Top 10 coverage, and a security-focused linter setup. Covers access control, data protection, input handling, secure design, configuration, dependencies, authentication, error handling, integrity, logging, external objects, and SSRF. |
+
 ### Idiomatic Go
 
 Skills for writing idiomatic, correct, and performant Go code.
