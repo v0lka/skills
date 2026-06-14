@@ -14,6 +14,17 @@ Conduct a structured review of every prompt in the codebase: system prompts,
 summarization instructions, tool descriptions, dynamic injections, and any
 string literal that will be sent to an LLM as instruction or context.
 
+## When NOT to Use This Skill
+
+- The prompt is already producing correct, reliable output and no specific
+  issue has been reported.
+- The prompt is small (<50 tokens) — micro-optimizations risk breaking
+  behavior.
+- The prompt uses model-specific patterns (XML tags for Claude, markdown for
+  GPT-4) that don't match generic advice in the checklist.
+- The user hasn't asked for a review — don't proactively optimize prompts
+  that work.
+
 ## Discovery Phase
 
 Locate ALL prompts before reviewing. Prompts appear in several forms:
@@ -52,7 +63,17 @@ grep -rn '"description"' --include="*.json" --include="*.yaml" --include="*.yml"
 
 ## Review Process
 
-For each discovered prompt, evaluate against the checklist in
+### Pre-Evaluation Gate
+
+For each discovered prompt, first ask:
+- Is this prompt currently producing correct, reliable output?
+- If yes, apply the "Don't Touch" gate from the checklist before evaluating.
+- Only proceed to full evaluation if there's evidence of a problem OR the user
+  specifically requested optimization.
+
+### Evaluation
+
+For prompts that pass the gate, evaluate against the checklist in
 [checklist.md](checklist.md). Produce findings in this format:
 
 ### Per-Prompt Report
@@ -98,5 +119,8 @@ After all prompts are reviewed, produce:
 
 ## Key Principles
 
-When evaluating, remember: the LLM is already very capable. Only instruct what
-it cannot infer. Every token competes for context window space.
+When evaluating, prioritize output quality over token savings. The LLM is
+very capable, but context *activates* its knowledge — don't strip reminders
+that direct attention to the right domain. Every token competes for context
+window space, but a wrong answer costs more than a few extra tokens. When in
+doubt, preserve the prompt.
