@@ -29,8 +29,8 @@ linters:
 
     # Style that affects security
     - revive          # golint replacement with configurable rules
-    - unconvert       # redundant type conversions (noise)
-    - sloglint        # consistent log/slog usage
+    - unconvert       # redundant type conversions (noise that distracts review)
+    - sloglint        # consistent log/slog usage (relevant to section 10)
 
 linters-settings:
   gosec:
@@ -38,7 +38,12 @@ linters-settings:
       - G104    # unchecked error — duplicates errcheck, which is more flexible
     config:
       G101:
-        entropy_threshold: "100.0"  # catch only obvious hardcoded secrets
+        # Entropy threshold for hardcoded secret detection.
+        # Default value depends on gosec version — check actual docs:
+        # https://github.com/securego/gosec#available-rules.
+        # Empirically, 100.0 gives minimum false positives and catches
+        # only obvious cases like "password = qwerty123".
+        entropy_threshold: "100.0"
       G301:
         mode: "0750"                # max directory permissions
       G302:
@@ -48,28 +53,33 @@ linters-settings:
 
   gocritic:
     enabled-checks:
-      - appendAssign
-      - badCall
-      - filepathJoin
-      - sloppyReassign
-      - weakCond
-      - unnecessaryBlock
-      - octalLiteral
+      - appendAssign       # append without assigning result
+      - badCall            # incorrect arguments to fmt/log
+      - filepathJoin       # filepath.Join with unsafe user input
+      - sloppyReassign     # reassigning err in a block, losing original error
+      - weakCond           # conditions that are always true/false
+      - unnecessaryBlock   # unnecessary blocks complicating reading
+      - octalLiteral       # 0777 without explicit 0o-prefix (Go 1.13+)
 
   staticcheck:
     checks:
       - all
-      - "-SA1019"   # deprecated — noisy on transitive deps
+      - "-SA1019"   # deprecated — noisy on transitive deps, better checked separately
 
   errcheck:
-    check-type-assertions: true
-    check-blank: false
+    check-type-assertions: true     # unchecked type assertions = runtime panic
+    check-blank: false              # _ = fn() — intentional choice, don't complain
 
   exhaustive:
-    default-signifies-exhaustive: true
+    default-signifies-exhaustive: true  # default in switch counts as covering all cases
 
   sloglint:
-    kv-only: true   # forbid slog.Info(fmt.Sprintf(...))
+    # kv-only forbids positional pairs and Sprintf; alternative — attr-only,
+    # which requires slog.Attr style (slog.Int, slog.String). Choose for your code.
+    kv-only: true   # forbid slog.Info(fmt.Sprintf(...)) — logs must be structured
+
+  noctx:
+    # No settings — just catches http.Get() / http.Post() without context
 
 issues:
   exclude-rules:
@@ -87,21 +97,21 @@ issues:
 
 | Linter | Catches |
 |--------|---------|
-| **gosec** | SQL injection via `fmt.Sprintf` (G201/G202), `text/template` instead of `html/template` (G203), OS command injection (G204), hardcoded secrets (G101), weak crypto (G401), unsafe TLS config (G402), `math/rand` instead of `crypto/rand` (G404), path traversal (G304/G305), file permission issues (G301/G302/G306) |
-| **bodyclose** | `resp, _ := http.Get(url)` without `defer resp.Body.Close()` — TCP connection leaks |
-| **noctx** | `http.Get(url)` instead of `http.NewRequestWithContext(ctx, ...)` — goroutine leaks |
-| **sqlclosecheck** + **rowserrcheck** | Unclosed `sql.Rows` (pool connection leak) + unchecked `rows.Err()` (silent data loss) |
-| **contextcheck** | Creating new `context.Background()` instead of using context from arguments — breaks cancellation chain |
-| **exhaustive** | Missing enum values in switch — silent fallthrough to default when new values are added |
-| **makezero** | `make([]int, 5)` + `append` producing `[0,0,0,0,0,x]` instead of `[x]` |
+| **gosec** | SQL injection via `fmt.Sprintf` (G201/G202), `text/template` instead of `html/template` (G203), OS command injection (G204), hardcoded secrets (G101), weak crypto (G401), unsafe TLS config (G402), `math/rand` instead of `crypto/rand` (G404), path traversal through user input (G304/G305), file permission issues (G301/G302/G306), HTTP requests with user-supplied URL (G107) |
+| **bodyclose** | `resp, _ := http.Get(url)` without `defer resp.Body.Close()` — TCP connection leaks. Under load, the service hits the file descriptor limit and stops responding |
+| **noctx** | `http.Get(url)` instead of `http.NewRequestWithContext(ctx, ...)` — no timeout, no cancellation. In server code, this leads to goroutine leaks |
+| **sqlclosecheck** + **rowserrcheck** | Unclosed `sql.Rows` (pool connection leak) + unchecked `rows.Err()` after `rows.Next()` loop (silent data loss on error) |
+| **contextcheck** | Using a non-inherited context deeper in the call chain (e.g., creating `context.Background()` on the spot). Breaks the entire cancellation and timeout chain |
+| **exhaustive** | Incomplete switch on enum types — silent fallthrough to default when new values are added |
+| **makezero** | `make([]T, n)` with non-zero length + `append` — a common bug: `[0,0,0,0,0,x]` instead of `[x]` |
 
 ### gosec rule reference
 
 - **G1xx** (general): hardcoded secrets (G101), bind to 0.0.0.0 (G102), unsafe usage (G103), HTTP requests with user-supplied URL (G107)
-- **G2xx** (injection): SQL construction via fmt.Sprintf (G201/G202), text/template vs html/template (G203), OS command injection (G204)
-- **G3xx** (files): over-permissive file creation (G301/G302), path traversal (G304/G305)
-- **G4xx** (crypto): weak algorithms MD5/SHA1 (G401), insecure TLS config (G402), math/rand instead of crypto/rand (G404)
-- **G5xx** (imports): blocked package imports (net/http/cgi, crypto/md5)
+- **G2xx** (injection): SQL construction via fmt.Sprintf (G201/G202), text/template vs html/template (G203), OS command construction from input (G204)
+- **G3xx** (files): over-permissive file creation permissions (G301/G302), path traversal through user input (G304/G305)
+- **G4xx** (crypto): weak algorithms MD5/SHA1 for hashing (G401), insecure TLS config (G402), math/rand instead of crypto/rand (G404)
+- **G5xx** (imports): blocked package imports (net/http/cgi, crypto/md5 directly)
 
 ## Running
 
@@ -130,6 +140,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.26'
+      # Current major version of the action: https://github.com/golangci/golangci-lint-action/releases
       - uses: golangci/golangci-lint-action@v9
         with:
           version: latest

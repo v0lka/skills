@@ -94,17 +94,23 @@ import (
 )
 
 func HashPasswordArgon2(password string) (hash, salt []byte, err error) {
+    // Generate random salt — always through crypto/rand
     salt = make([]byte, 16)
     if _, err := rand.Read(salt); err != nil {
         return nil, nil, err
     }
-    // OWASP Password Storage Cheat Sheet baseline: m=64MiB, t=1, p=4, keyLen=32
+    // Practical guidance from OWASP Password Storage Cheat Sheet:
+    // baseline profile — m=19 MiB, t=2, p=1, keyLen=32 (minimum sufficient).
+    // Heavier profile from the same cheat sheet, if hardware allows:
+    // m=64 MiB, t=1, p=4 — extra memory-hardness margin.
+    // Tune for target hardware — target ~0.5–1 second CPU per hash.
     hash = argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
     return hash, salt, nil
 }
 
 func VerifyPasswordArgon2(password string, hash, salt []byte) bool {
     candidate := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+    // subtle.ConstantTimeCompare protects against timing attacks
     return subtle.ConstantTimeCompare(candidate, hash) == 1
 }
 ```
@@ -112,10 +118,18 @@ func VerifyPasswordArgon2(password string, hash, salt []byte) bool {
 ### Secrets from environment
 
 ```go
-var jwtSecret = []byte(os.Getenv("JWT_SECRET")) // simplest, sufficient for most
+// Variant 1 — os.Getenv (sufficient for most cases):
+var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+
+// Variant 2 — koanf (typed config from multiple sources):
+import "github.com/knadh/koanf/v2"
 
 // Never:
 var jwtSecret = []byte("my-secret-key-2024")    // secret in code — bug
+
+// Also never — secret in config.yaml committed to git:
+// database:
+//   password: "supersecret123"
 ```
 
 For more complex setups, [koanf](https://github.com/knadh/koanf) reads from env, files, flags simultaneously:

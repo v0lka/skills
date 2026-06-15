@@ -39,10 +39,11 @@ Comprehensive checklist for secure Go development, organized by OWASP Top 10 cat
 - [ ] Production mode by default (`GIN_MODE=release`)
 - [ ] Stack traces and `err.Error()` not returned to clients
 - [ ] Security headers configured (CSP, X-Frame-Options, HSTS, nosniff)
-- [ ] Dockerfile: minimal image, non-root, nothing unnecessary
+- [ ] Dockerfile: minimal image with pinned sha256 digest, non-root, nothing unnecessary
 - [ ] File uploads: type check + size limit
+- [ ] Build flags: `-trimpath` (strips paths); `-s -w` only if profiling/pprof is not needed
 
-## Dependencies (A06:2021 → A03:2025)
+## Dependencies (A06:2021 → A03:2025 — Software Supply Chain Failures; expanded beyond outdated deps to include typosquatting, compromised maintainers, registry substitution)
 
 - [ ] govulncheck in CI
 - [ ] `go mod tidy` — no unused dependencies
@@ -54,18 +55,18 @@ Comprehensive checklist for secure Go development, organized by OWASP Top 10 cat
 
 - [ ] Authentication via ready-made library (golang-jwt/v5, go-oidc) or identity platform (Kratos, SuperTokens, ZITADEL)
 - [ ] JWT: `exp` + algorithm check (EdDSA/RS256 preferred for new systems)
-- [ ] Rate limiting on login by IP
+- [ ] Rate limiting on login by IP + by account
 - [ ] Uniform error responses (no user enumeration)
-- [ ] Session invalidated on logout
+- [ ] Session invalidated on logout (denylist or server record deletion)
 
 ## Error Handling (A10:2025, new in 2025)
 
-- [ ] Every goroutine — separate `defer recover()`
-- [ ] Multi-step business operations — in transactions
+- [ ] Long-lived workers — `defer recover()` at isolation boundary
+- [ ] Multi-step business operations — in transactions with `defer tx.Rollback()`
 - [ ] Recovery middleware doesn't leak internals
 - [ ] Resources cleaned up on errors (`defer`)
 
-## Integrity (A08:2021 / A08:2025)
+## Integrity (A08:2021 / A08:2025; in 2025 partially redistributed: supply chain → A03, data integrity remained as A08)
 
 - [ ] Client data not deserialized via gob without signature
 - [ ] Cookies signed (gorilla/securecookie or HMAC)
@@ -73,14 +74,14 @@ Comprehensive checklist for secure Go development, organized by OWASP Top 10 cat
 - [ ] `go mod verify` in CI
 - [ ] CDN resources with SRI
 
-## Logging & Alerting (A09:2021 / A09:2025)
+## Logging & Alerting (A09:2021 / A09:2025; emphasis shifted to alerting in 2025)
 
 - [ ] Significant events logged (login, logout, auth errors)
 - [ ] Sensitive data not in logs
 - [ ] Structured logging (slog/zerolog/zap)
 - [ ] Alerting on anomalies
 
-## External Objects (cross-cutting)
+## External Objects (cross-cutting: A04/A06 + A03/A05)
 
 - [ ] File paths — `filepath.Abs` + prefix check
 - [ ] Data updates — typed structs (not `map[string]interface{}`)
@@ -93,3 +94,14 @@ Comprehensive checklist for secure Go development, organized by OWASP Top 10 cat
 - [ ] Private IPs blocked
 - [ ] Raw responses not returned to clients
 - [ ] HTTP client with timeout and redirect validation
+
+## AI-Assisted Development (OWASP LLM Top 10 2025)
+
+- [ ] `AGENTS.md`/`SECURITY.md` pin security invariants of the project
+- [ ] Agent skills connected: secure-go, idiomatic-go, sdd, security-policy-generator
+- [ ] Spec-Driven Development: spec and tests — before code generation
+- [ ] Agent works in a sandbox; production secrets inaccessible
+- [ ] Tool permissions granted minimally
+- [ ] AI-PRs pass all the same CI gates: vet/lint/govulncheck/race
+- [ ] Sensitive changes (auth/crypto/access) undergo manual review
+- [ ] Agent tool-calls are logged as audit events

@@ -86,6 +86,8 @@ Only the first 5 characters of the password hash are sent to the external servic
 ```go
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
     var req ForgotPasswordRequest
+    // Suppress parse error intentionally: even on invalid JSON
+    // the response must be the same — otherwise a side-channel for email enumeration appears.
     _ = c.BindJSON(&req)
 
     user, err := h.users.GetByEmail(c, req.Email)
@@ -99,11 +101,37 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 }
 ```
 
+### Full session invalidation on logout
+
+"Logout" must mean the presented token/session ID no longer works on any node. For server-side sessions — delete the record; for JWT-like stateless schemes — denylist by `jti` or short `exp` + refresh token rotation with revocation:
+
+```go
+// Server-side session (gorilla/sessions, Redis-backed):
+func (h *AuthHandler) Logout(c *gin.Context) {
+    session, _ := h.store.Get(c.Request, "session")
+    session.Options.MaxAge = -1 // Set-Cookie with expired date
+    _ = session.Save(c.Request, c.Writer)
+    _ = h.sessionRepo.Delete(c, sessionIDFrom(session)) // delete server record
+}
+
+// JWT with jti-based denylist:
+func (h *AuthHandler) LogoutJWT(c *gin.Context, claims jwt.MapClaims) {
+    jti, _ := claims["jti"].(string)
+    exp, _ := claims["exp"].(float64)
+    // Remember jti until its natural exp — then it can be cleaned up.
+    _ = h.revoked.Add(c, jti, time.Until(time.Unix(int64(exp), 0)))
+}
+```
+
+Without the invalidation step, "logout" only removes the cookie from the user, but a stolen token continues to work until its `exp`.
+
 ## 8. Error Handling
 
 > OWASP: A10:2025 — Mishandling of Exceptional Conditions (new in 2025)
 
 ### Every goroutine gets its own recover
+
+Framework recovery middleware (Gin, Echo, Fiber) only protects the HTTP request goroutine. For background workers, queues, and periodic jobs — put `defer recover()` at the isolation boundary. Silencing panics in every ordinary one-off goroutine is an anti-pattern: software bugs should crash loudly and be visible in tests.
 
 ```go
 // Wrong — panic in goroutine kills the entire process:
@@ -111,18 +139,18 @@ go func() {
     result := processPayment(amount)
 }()
 
-// Correct — recover in every goroutine:
+// Correct — recover at the boundary of a long-lived worker:
 go func() {
     defer func() {
         if r := recover(); r != nil {
-            log.Error("payment goroutine panic", "recovered", r)
+            log.Error("payment worker panic", "recovered", r)
         }
     }()
-    result := processPayment(amount)
+    for job := range paymentJobs {
+        process(job)
+    }
 }()
 ```
-
-Framework recovery middleware (Gin, Echo, Fiber) only protects the HTTP request goroutine.
 
 ### Multi-step operations in transactions
 

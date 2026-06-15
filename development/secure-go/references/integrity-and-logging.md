@@ -4,7 +4,7 @@ Reference for sections 9 (Integrity) and 10 (Logging & Alerting) of the secure-g
 
 ## 9. Data & Software Integrity
 
-> OWASP: A08:2021 → A08:2025 — Software or Data Integrity Failures
+> OWASP: A08:2021 → A08:2025 — Software or Data Integrity Failures. In 2025 partially redistributed: supply chain moved to A03:2025, data/signature integrity verification remained as A08.
 
 ### Sign client-side data with HMAC
 
@@ -60,10 +60,12 @@ s.Decode("cart", cookie.Value, &cart) // error if signature invalid
 ### CSRF protection — Go 1.25+ built-in
 
 ```go
-// Go 1.25+ built-in CSRF protection:
+// Go 1.25+ built-in CSRF protection — checks Origin & Referer, no tokens needed:
 mux := http.NewServeMux()
 mux.HandleFunc("POST /api/orders", createOrder)
-handler := http.CrossOriginProtection(mux) // checks Origin & Referer, no tokens needed
+
+// Wrap the mux — all state-changing requests are protected:
+handler := http.CrossOriginProtection(mux)
 http.ListenAndServe(":8080", handler)
 ```
 
@@ -111,7 +113,7 @@ shasum -b -a 384 lib.js | awk '{ print $1 }' | xxd -r -p | base64 -w 0
 
 ## 10. Logging & Alerting
 
-> OWASP: A09:2021 → A09:2025 — Security Logging & Alerting Failures
+> OWASP: A09:2021 → A09:2025 — Security Logging & Alerting Failures. "Alerting" explicitly added to the name in 2025 — emphasis shifted to alerting, not just log collection.
 
 ### Structured logging with log/slog (Go 1.21+)
 
@@ -144,10 +146,12 @@ slog.Info("search performed", "query", userQuery)
 // Wrong:
 slog.Info("login failed", "password", req.Password)
 slog.Info("payment", "cc_number", req.CCNumber)
+slog.Info("reset token generated", "token", resetToken)
 
 // Correct:
 slog.Warn("login failed", "email", req.Email)
 slog.Info("payment processed", "order_id", orderID, "last4", ccLast4)
+slog.Info("reset token generated", "email", user.Email)
 ```
 
 ### Audit middleware

@@ -46,7 +46,8 @@ r.Use(SecurityHeaders())
 // Wrong — raw http.Dir enables directory listing:
 r.StaticFS("/uploads", http.Dir("./uploads"))
 
-// Correct — Gin wrapper disables listing:
+// Correct — Gin wrapper Dir(root, false) disables listing.
+// r.Static does exactly this under the hood:
 r.Static("/uploads", "./uploads")
 // or explicitly:
 r.StaticFS("/uploads", gin.Dir("./uploads", false))
@@ -63,14 +64,23 @@ func Upload(c *gin.Context) {
     }
     defer file.Close()
 
+    // Check Content-Type by magic bytes.
+    // Use io.ReadAtLeast — it doesn't treat short reads as fatal
+    // (small files < 512 bytes are valid), while full io.EOF/other errors are caught explicitly.
     buf := make([]byte, 512)
-    if _, err := io.ReadFull(file, buf); err != nil && err != io.ErrUnexpectedEOF {
+    n, err := io.ReadAtLeast(file, buf, 1)
+    if err != nil {
         c.JSON(400, gin.H{"error": "cannot read file"})
         return
     }
-    contentType := http.DetectContentType(buf)
-    // IMPORTANT: seek back after reading magic bytes
-    file.Seek(0, io.SeekStart)
+    contentType := http.DetectContentType(buf[:n])
+
+    // IMPORTANT: after Read the pointer has advanced. If saving the file below —
+    // seek back to the beginning, otherwise the first 512 bytes will be lost.
+    if _, err := file.Seek(0, io.SeekStart); err != nil {
+        c.JSON(500, gin.H{"error": "seek failed"})
+        return
+    }
 
     allowed := map[string]bool{"image/jpeg": true, "image/png": true, "image/gif": true}
     if !allowed[contentType] {
@@ -104,29 +114,35 @@ log.Fatal(srv.ListenAndServeTLS(certFile, keyFile))
 ### Production Dockerfile
 
 ```dockerfile
-FROM golang:1.26-alpine AS builder
+# Multi-stage build: build in full image, run in minimal.
+# In production, pin specific patch version + sha256 digest
+# to prevent silently changed images on rebuild.
+FROM golang:1.26.0-alpine@sha256:<digest> AS builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 COPY . .
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /server ./cmd/server
+RUN CGO_ENABLED=0 go build -o /server ./cmd/server
 
-FROM gcr.io/distroless/static-debian12
+# Final image — also with digest:
+FROM gcr.io/distroless/static-debian12@sha256:<digest>
 COPY --from=builder /server /server
 USER nonroot:nonroot
 ENTRYPOINT ["/server"]
 ```
-
-- `-trimpath` strips absolute paths from the binary
-- `-ldflags="-s -w"` strips debug info
-- `CGO_ENABLED=0` produces a static binary
-- `USER nonroot` — never run containers as root
 
 ### Production build flags
 
 ```dockerfile
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /server ./cmd/server
 ```
+
+- `-trimpath` strips absolute paths from the binary; removes VCS info that would leak via `runtime/debug.BuildInfo`
+- `-ldflags="-s -w"` strips symbol table and DWARF debug data
+- `CGO_ENABLED=0` produces a static binary
+- `USER nonroot` — never run containers as root
+
+**Trade-off:** `-s -w` removes debug info, which shrinks the binary and removes internal identifiers from dumps, but breaks profilers, debuggers, and quality of stack traces in incident dumps. If production profiling (`pprof`) or an external tracer with symbolization is used, keep only `-trimpath` and apply `-s -w` selectively.
 
 ## 6. Dependencies
 

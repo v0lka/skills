@@ -28,7 +28,7 @@ func SafeFilePath(baseDir, userPath string) (string, error) {
 }
 ```
 
-**Go 1.24+ alternative:** `os.Root` / `os.OpenRoot` — opens a root directory and prevents operations (`Open`, `Create`, `Stat`, `Remove`) from escaping it, even through symlinks. Preferred for new code.
+**Go 1.24+ alternative:** `os.Root` / `os.OpenRoot` — opens a root directory and prevents operations (`Open`, `Create`, `Stat`, `Remove`) from escaping it, even through symlinks. More idiomatic than manual `filepath.Abs` + `HasPrefix`. Preferred for new code.
 
 ### Mass assignment prevention — struct whitelisting
 
@@ -46,9 +46,17 @@ type UpdateProfileRequest struct {
 }
 ```
 
-Struct-based binding (Gin `ShouldBindJSON`, Echo `Bind`, Fiber `BodyParser`) ignores fields not in the struct by default — whitelist without extra code:
+Struct-based binding (Gin `ShouldBindJSON`, Echo `Bind`, Fiber `BodyParser`) ignores fields not in the struct by default — whitelist without extra code. The struct defines which fields are accepted:
 
 ```go
+// The struct defines which fields are accepted.
+// Client can send {"full_name": "...", "role": "admin"},
+// but role won't land in the struct because it's not there.
+type UpdateProfileRequest struct {
+    FullName string `json:"full_name"`
+    Email    string `json:"email"`
+}
+
 func UpdateProfile(c *gin.Context) {
     var req UpdateProfileRequest
     if err := c.ShouldBindJSON(&req); err != nil {
@@ -225,7 +233,9 @@ func SafeFetch(ctx context.Context, rawURL string) (*http.Response, error) {
         return nil, errors.New("DNS resolution failed")
     }
 
-    // Verify every resolved IP
+    // Verify every resolved IP — use the same isReservedIP
+    // as above. Approaches must match: both the "dangerous" range list
+    // and the reaction to resolution failure.
     for _, addr := range addrs {
         ip := net.ParseIP(addr)
         if ip == nil || ip.IsPrivate() || ip.IsLoopback() || ip.IsLinkLocalUnicast() {
@@ -259,7 +269,7 @@ func SafeFetch(ctx context.Context, rawURL string) (*http.Response, error) {
 }
 ```
 
-**Production note:** the example above only uses `addrs[0]`. For production, implement a retry loop over all `addrs` — the first address may be unreachable.
+**Production note:** the example above only uses `addrs[0]`. For production, implement a retry loop over all `addrs` — the first address may be unreachable, and without fallback the request will fail.
 
 ### Don't proxy raw responses to clients
 

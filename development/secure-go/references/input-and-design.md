@@ -35,6 +35,9 @@ func (q *Queries) SearchProducts(ctx context.Context, pattern string) ([]Product
     rows, err := q.db.QueryContext(ctx, searchProducts, pattern)
     // ... parameterization guaranteed at generation time
 }
+
+// Usage — simple function call:
+products, err := queries.SearchProducts(ctx, "%"+userInput+"%")
 ```
 
 ### ORM raw queries — the trap
@@ -159,6 +162,8 @@ const (
     MaxRequestsRate = 100      // per second
 )
 ```
+
+Note: Go's race detector (`-race`) detects data races but does NOT help with race conditions — bugs where the **order** of goroutine execution is the problem, regardless of which data they access.
 
 ### Rate limiting with golang.org/x/time/rate
 

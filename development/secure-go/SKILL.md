@@ -62,7 +62,7 @@ Every data operation checks that the current user has the right to that operatio
 
 ### Recommended libraries & tools
 
-- **`golang.org/x/crypto/bcrypt`** & **`golang.org/x/crypto/argon2`** — password hashing. bcrypt simpler; Argon2id preferred for new systems.
+- **`golang.org/x/crypto/bcrypt`** & **`golang.org/x/crypto/argon2`** — password hashing. bcrypt simpler (manages salt and packs parameters into string), Argon2id adjustable in memory, preferred for new systems; bcrypt with cost 12+ remains acceptable per OWASP. Practical guidance from OWASP Password Storage Cheat Sheet: baseline profile m=19 MiB, t=2, p=1, keyLen=32 (minimum sufficient); heavier profile m=64 MiB, t=1, p=4 if hardware allows. Target ~0.5–1 second CPU per hash.
 - **`crypto/rand`** — random values (salt, tokens, keys).
 - **`crypto/subtle`** — `ConstantTimeCompare` for timing-safe hash comparisons.
 - **[golang-jwt/jwt/v5](https://github.com/golang-jwt/jwt)** — JWT with mandatory algorithm verification.
@@ -143,20 +143,20 @@ Problems that can't be fixed at implementation because they're baked into the ar
 - Security headers configured once in middleware.
 - `http.Server` always has `ReadHeaderTimeout`/`ReadTimeout`/`WriteTimeout`. TLS ≥ 1.2.
 - Environment configuration is automated and reproducible (Dockerfile, docker-compose, Terraform).
-- Docker: multi-stage builds, distroless runtime, non-root user (`USER nonroot`).
-- Build flags: `-trimpath` strips paths; `-ldflags="-s -w"` strips debug info; `CGO_ENABLED=0` for static binaries.
+- Docker: multi-stage builds, distroless runtime, non-root user (`USER nonroot`). Pin specific patch version + sha256 digest in production builds to prevent silently changed images on rebuild.
+- Build flags: `-trimpath` strips paths; `-ldflags="-s -w"` strips debug info; `CGO_ENABLED=0` for static binaries. Trade-off: `-s -w` removes symbol table and DWARF data — this shrinks binary and removes internal identifiers from dumps, but breaks profilers, debuggers, and symbolic stack traces. For production profiling (`pprof`), use only `-trimpath`.
 
 ### Recommended libraries & tools
 
-- **[secure](https://github.com/unrolled/secure)** — security headers middleware for Gin, Echo, Chi, net/http.
-- **Echo `Secure` middleware** — built into `github.com/labstack/echo/v4/middleware`.
-- **`http.DetectContentType`** — stdlib, MIME detection from first 512 bytes.
+- **[secure](https://github.com/unrolled/secure)** — security headers middleware for Gin, Echo, Chi, net/http. One line: `r.Use(secure.New(secure.Options{...}).Handler)`.
+- **Echo `Secure` middleware** — built into `github.com/labstack/echo/v4/middleware`. Covers CSP, HSTS, X-Frame-Options, XSS-Protection, content-type-nosniff.
+- **`http.DetectContentType`** — stdlib, MIME detection from first 512 bytes. Use `io.ReadAtLeast` (not `io.ReadFull`) — small files < 512 bytes are valid.
 
 ---
 
 ## 6. Dependencies — manage what you use
 
-> OWASP: A06:2021 → A03:2025 — Software Supply Chain Failures.
+> OWASP: A06:2021 → A03:2025 — Software Supply Chain Failures. Category expanded: beyond outdated dependencies, now explicitly covers supply chain risks — typosquatting, compromised maintainer accounts, registry package substitution.
 
 **Code examples & CI config:** [references/config-and-deps.md](references/config-and-deps.md#6-dependencies) — govulncheck, CI workflow, version pinning, toolchain updates.
 
@@ -194,7 +194,7 @@ Delegate at the highest possible level: identity platform > OIDC client > JWT li
 - JWT: always with `exp`, always with algorithm check. Prefer EdDSA/RS256 for new systems.
 - Passwords: minimum length enforced.
 - Session IDs: only `crypto/rand`.
-- On logout: full session invalidation.
+- On logout: full session invalidation. For server-side sessions — delete the record. For JWT — denylist by `jti` or short `exp` + refresh token rotation with revocation. Without invalidation, "logout" only removes the cookie, but a stolen token keeps working until expiry.
 - Rate limiting on login: by IP + by account.
 - Uniform error responses on authentication failures. No user enumeration.
 
@@ -218,15 +218,15 @@ Delegate at the highest possible level: identity platform > OIDC client > JWT li
 
 ### Rules
 
-- Every goroutine: its own `defer recover()`. Framework recovery middleware only protects the HTTP request goroutine.
+- Long-lived goroutines (background workers, queues): `defer recover()` at the isolation boundary. One-off goroutines don't need silencing — software bugs should crash loudly and be visible in tests.
 - Multi-step business operations: transactions with `defer tx.Rollback()`.
-- Recovery middleware: standard. Custom only if guaranteed not to leak stack traces.
+- Recovery middleware: standard for request goroutines, custom for own workers. Never leak stack traces to clients.
 - Resources (files, connections): cleanup on errors via `defer`.
 - `panic` — for unrecoverable situations only. Not for normal errors.
 
 ### Recommended libraries & tools
 
-- **`gin.Recovery()`** / **`echo.Recover()`** / **`fiber.Recover()`** — built-in recovery middleware.
+- **`gin.Recovery()`** / **`echo.Recover()`** / **`fiber.Recover()`** — built-in recovery middleware for HTTP request goroutines.
 - **[errgroup](https://pkg.go.dev/golang.org/x/sync/errgroup)** — goroutine coordination. One fails → others canceled via context.
 - **`database/sql` transactions** — `defer tx.Rollback()` idiom.
 - **`defer`** — resource cleanup on errors.
@@ -235,7 +235,7 @@ Delegate at the highest possible level: identity platform > OIDC client > JWT li
 
 ## 9. Data & Software Integrity — verify what you receive
 
-> OWASP: A08:2021 → A08:2025 — Software or Data Integrity Failures.
+> OWASP: A08:2021 → A08:2025 — Software or Data Integrity Failures. In 2025 partially redistributed: supply chain moved to A03:2025, data/signature integrity verification remained as A08.
 
 **Code examples:** [references/integrity-and-logging.md](references/integrity-and-logging.md#9-data--software-integrity) — HMAC signing, signed cookies, CSRF, CI integrity pipeline, SRI.
 
@@ -259,9 +259,9 @@ Delegate at the highest possible level: identity platform > OIDC client > JWT li
 
 ## 10. Logging & Alerting — record what helps investigation
 
-> OWASP: A09:2021 → A09:2025 — Security Logging & Alerting Failures. Alerting added in 2025.
+> OWASP: A09:2021 → A09:2025 — Security Logging & Alerting Failures. "Alerting" explicitly added to the name in 2025 — emphasis shifted to alerting, not just log collection.
 
-**Code examples:** [references/integrity-and-logging.md](references/integrity-and-logging.md#10-logging--alerting) — `log/slog` setup, sensitive data avoidance, audit middleware, Prometheus metrics.
+**Code examples:** [references/integrity-and-logging.md](references/integrity-and-logging.md#10-logging--alerting) — `log/slog` setup, sensitive data avoidance (passwords, tokens, card numbers, reset tokens), audit middleware, Prometheus metrics.
 
 ### Rules
 
@@ -322,13 +322,43 @@ Delegate at the highest possible level: identity platform > OIDC client > JWT li
 
 ### Recommended libraries & tools
 
-- **`net`** — IP checking (`net.ParseIP`, `net.IP.IsPrivate` since Go 1.17).
+- **`net`** — IP checking (`net.ParseIP`, `net.ParseCIDR`, `net.IP.IsPrivate` since Go 1.17).
 - **`net/http`** — `http.Client` with `Timeout` and `CheckRedirect`. Default client has no timeout — always create your own.
-- **`io.LimitReader`** — limit response body size.
-- **DNS rebinding protection** — resolve once, check all IPs, connect via verified IP with explicit `ServerName` in `tls.Config`.
+- **`io.LimitReader`** — limit response body size. Without it, an attacker forces the server to download a gigabyte response.
+- **DNS rebinding protection** — resolve once, check all IPs, connect via verified IP with explicit `ServerName` in `tls.Config`. For production, implement a retry loop over all resolved addresses — the first address may be unreachable.
 
 ---
+---
 
+## 13. AI-Assisted Development — process and code in the age of agents
+
+> OWASP: intersects with OWASP Top 10 for LLM Applications 2025 (LLM01 Prompt Injection, LLM02 Insecure Output Handling, LLM05 Improper Output Handling, LLM08 Excessive Agency) and all twelve sections above — because agent-written code falls into the same vulnerability categories as human-written code.
+
+As of mid-2026, "ask an agent to write a handler" is as routine as searching Stack Overflow was a decade ago. One thing changed: the agent edits files, runs commands, reads dependencies and issues, sometimes deploys. This introduces two new risk classes:
+
+1. **Generated code quality.** Models are trained on public repos — full of `fmt.Sprintf` in SQL, `math/rand` for tokens, `text/template` for HTML, and middleware with swallowed errors.
+2. **Process security.** The agent reads external data (issue comments, READMEs of dependencies, web pages, MCP server responses) — any of these strings can contain instructions the model treats as commands (prompt injection, including indirect injection through repo file content).
+
+### Rules
+
+- Agent context is pinned in the repository (`AGENTS.md`/`SECURITY.md`/skills), documenting security invariants.
+- Specifications and tests are written before code generation; the agent implements them.
+- Agent tools run in a sandbox without access to production secrets; tool permissions are granted minimally.
+- AI-PRs pass the same CI gates as human ones: `go vet`, `golangci-lint`, `govulncheck`, `go test -race`. No exemptions for generated code.
+- Sensitive changes (auth, crypto, data access, external requests) require mandatory human review.
+- Agent tool-calls are logged at production audit-log level: `tool`, `args`, `result`, `initiator`.
+
+### Recommended libraries & tools
+
+- **`AGENTS.md` / `SECURITY.md`** in the repo root — minimal but measurably effective way to set agent context.
+- **OWASP Top 10 for LLM Applications 2025** ([genai.owasp.org](https://genai.owasp.org/llm-top-10/)) — separate risk list for LLM systems: Prompt Injection, Insecure Output Handling, Sensitive Information Disclosure, Excessive Agency.
+- **Sandboxing for the agent**: dev containers, Docker-based runners, gVisor/Firecracker for strict isolation. Minimum: `docker run --network=none --read-only` for test execution.
+- **Tool-call logging**: same `slog` JSON logs as in production, plus full prompt-input/output storage in a protected store — for post-incident prompt injection analysis.
+- **`govulncheck` and `gosec`** on every AI-PR, mandatory (see sections 6 and Linters).
+- **Secret scanners in pre-commit**: `gitleaks`, `trufflehog`. If the agent accidentally placed `.env` in a diff, the gate must be before push, not after.
+- **Prompt injection scanner for code and skills**: [ipi-check](https://github.com/v0lka/ipi-check) — scan everything fed to a coding agent.
+
+---
 ## Linters — automate what you shouldn't have to remember
 
 `go vet` is necessary hygiene but not a full security suite. **[golangci-lint](https://golangci-lint.run/)** unifies 150+ linters.
