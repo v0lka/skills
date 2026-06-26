@@ -1,191 +1,191 @@
 ---
 name: humanize-ru
 description: >
-  Убирает признаки машинной генерации из русскоязычного AI-текста, сохраняя
-  его исходный регистр и коммуникативную цель. Не превращает всё в разговорный
-  стиль — научный текст остаётся научным, деловой деловым, а разговорный
-  разговорным. Используй, когда нужно убрать AI-маркеры из текста для
-  публикации, обойти детекторы ИИ или адаптировать машинный вывод под
-  естественную русскую речь нужного регистра.
+  Removes signs of machine generation from Russian-language AI text, preserving
+  its original register and communicative purpose. Does not turn everything into conversational
+  style — scientific text remains scientific, business text remains business, and conversational
+  remains conversational. Use when you need to remove AI markers from text for
+  publication, bypass AI detectors, or adapt machine output to
+  natural Russian speech in the required register.
 ---
 
-# Humanize RU — удаление AI-маркеров из русского текста
+# Humanize RU — removing AI markers from Russian text
 
-Убери из текста признаки машинной генерации, сохранив его исходный регистр
-и коммуникативную цель.
+Remove signs of machine generation from the text, preserving its original register
+and communicative purpose.
 
-**Главный принцип:** не «сделать текст разговорным», а «убрать AI-маркеры,
-сохранив уместный для контекста регистр».
+**Core principle:** not "make the text conversational", but "remove AI markers,
+keeping the register appropriate for the context."
 
-## Когда использовать
+## When to use
 
-- Текст от ChatGPT, Claude, Gemini или другой LLM нужно опубликовать
-  под авторством человека.
-- Заказчик или преподаватель проверяет текст детектором ИИ.
-- Машинный текст звучит сухо, шаблонно, неестественно для своего жанра.
-- Требуется адаптировать AI-вывод под конкретный tone of voice.
+- Text from ChatGPT, Claude, Gemini, or another LLM needs to be published
+  under human authorship.
+- A client or instructor checks the text with an AI detector.
+- Machine text sounds dry, formulaic, unnatural for its genre.
+- AI output needs to be adapted to a specific tone of voice.
 
-## Процедура
+## Procedure
 
-### Шаг 0 — Определи регистр текста
+### Step 0 — Determine the text register
 
-ПРЕЖДЕ ВСЕГО определи функциональный стиль (регистр) исходного текста.
-От этого зависит, какие трансформации уместны, а какие разрушат текст.
+FIRST, determine the functional style (register) of the source text.
+The appropriate transformations — and the ones that would ruin the text — depend on this.
 
-**Пять регистров и их ключевые признаки:**
+**Five registers and their key features:**
 
-| Регистр                | Лексические признаки                                                      | Синтаксис                                                           | Допустимо «я»?                        | Примеры жанров                                            |
+| Register                | Lexical features                                                          | Syntax                                                              | "I" allowed?                          | Genre examples                                           |
 | ---------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------- |
-| **Разговорный**        | Разговорная лексика, частицы, стяжения, эллипсис                          | Короткие предложения, парцелляция, инверсии                         | Да, свободно                          | Пост в Telegram, личное письмо, комментарий               |
-| **Публицистический**   | Общеупотребительная лексика + экспрессивные элементы, риторические приёмы | Разнообразный: чередование коротких и длинных, вопросы, восклицания | Да, авторская позиция                 | Блог, статья в СМИ, колонка, лонгрид                      |
-| **Научный**            | Термины, абстрактная лексика, отглагольные существительные                | Сложный синтаксис, пассивный залог, чёткая логическая структура     | Только «мы» (авторское) в методологии | Научная статья, диссертация, учебник, аналитический отчёт |
-| **Официально-деловой** | Канцеляризмы, клише делового оборота, стандартизированные формулировки    | Громоздкий, рубленый, безэмоциональный, строгий порядок слов        | Нет                                   | Приказ, договор, деловое письмо, инструкция, отчёт        |
-| **Художественный**     | Образная лексика, метафоры, индивидуально-авторские слова                 | Свободный, подчинённый художественной задаче                        | Зависит от повествователя             | Рассказ, роман, эссе, художественный очерк                |
+| **Разговорный**        | Conversational vocabulary, particles, contractions, ellipsis              | Short sentences, parcellation, inversions                           | Yes, freely                           | Пост в Telegram, личное письмо, комментарий               |
+| **Публицистический**   | Common vocabulary + expressive elements, rhetorical devices               | Varied: alternating short and long, questions, exclamations         | Yes, author's position                | Блог, статья в СМИ, колонка, лонгрид                      |
+| **Научный**            | Terms, abstract vocabulary, verbal nouns                                  | Complex syntax, passive voice, clear logical structure              | Only "мы" (author's) in methodology   | Научная статья, диссертация, учебник, аналитический отчёт |
+| **Официально-деловой** | Bureaucratic formulas, business clichés, standardized phrasing            | Cumbersome, clipped, unemotional, strict word order                 | No                                    | Приказ, договор, деловое письмо, инструкция, отчёт        |
+| **Художественный**     | Figurative vocabulary, metaphors, individual-authorial words              | Free, subordinated to artistic purpose                              | Depends on narrator                   | Рассказ, роман, эссе, художественный очерк                |
 
-**Как определить регистр** (проверь по порядку, первый подходящий — ответ):
+**How to determine the register** (check in order, first match is the answer):
 
-1. **Формальный маркер?** Приказ, договор, инструкция, официальное письмо → Официально-деловой.
-2. **Научная лексика?** Термины, ссылки на источники, методология, абстрактные понятия в роли подлежащих → Научный.
-3. **Художественные приёмы?** Сюжет, персонажи, явная образность, метафоры как основа → Художественный.
-4. **Личный голос + экспрессия?** «Я», риторические вопросы, оценки, призывы — без строгой научной структуры → Публицистический.
-5. **Коротко, неформально, с частицами?** «Ну», «вот», «короче», эллипсис, эмодзи → Разговорный.
+1. **Formal marker?** Приказ, договор, инструкция, официальное письмо → Официально-деловой.
+2. **Scientific vocabulary?** Terms, citations, methodology, abstract concepts as subjects → Научный.
+3. **Literary devices?** Plot, characters, explicit imagery, metaphors as foundation → Художественный.
+4. **Personal voice + expression?** "Я", rhetorical questions, value judgments, calls to action — without rigid scientific structure → Публицистический.
+5. **Short, informal, with particles?** "Ну", "вот", "короче", ellipsis, emoji → Разговорный.
 
-**Если не уверен — выбери Публицистический.** Это нейтральный регистр, из
-которого можно сместиться в любую сторону по запросу пользователя.
+**If unsure — default to Публицистический.** This is the neutral register, from
+which you can shift in any direction at the user's request.
 
-**НИКОГДА не понижай регистр без явной причины.** Научный текст,
-«очеловеченный» до разговорного — это испорченный научный текст.
+**NEVER lower the register without an explicit reason.** A scientific text
+"humanized" down to a conversational level is a ruined scientific text.
 
-### Шаг 1 — Диагностика: найди AI-маркеры
+### Step 1 — Diagnosis: find AI markers
 
-Найди и явно выпиши все признаки машинного происхождения текста. Полный
-каталог маркеров с примерами и объяснениями — в
-[references/ai-markers.md](references/ai-markers.md). Загрузи этот файл
-перед началом диагностики.
+Find and explicitly list all signs of machine origin in the text. The full
+marker catalog with examples and explanations is in
+[references/ai-markers.md](references/ai-markers.md). Load this file
+before starting diagnosis.
 
-Краткий обзор категорий маркеров:
+Brief overview of marker categories:
 
-- **Лексические клише** — шаблонные фразы: «в современном мире», «следует
-  отметить», «играет важную роль», «представляет собой» и др.
-- **Структурные паттерны** — однотипные начала абзацев, «правило трёх»,
-  одинаковая длина предложений, шаблонные противопоставления «не X, а Y».
-- **Синтаксис** — монотонный порядок слов, нанизывание родительных падежей,
-  избыток «который», чрезмерный пассивный залог.
-- **Стиль** — безличность, эмоциональная нейтральность, энциклопедический
-  стиль, отсутствие разговорных элементов, неуместные метафоры.
-- **Английские кальки** — «является» вместо нулевой связки, «делать» как
-  универсальный глагол, обязательное подлежащее, «иметь» вместо конкретных
-  глаголов.
-- **Содержательные признаки** — отсутствие конкретики, логические петли,
-  отсутствие контекста, галлюцинации.
+- **Lexical clichés** — formulaic phrases: "в современном мире", "следует
+  отметить", "играет важную роль", "представляет собой" and others.
+- **Structural patterns** — uniform paragraph openings, "rule of three",
+  identical sentence length, template contrasts "не X, а Y".
+- **Syntax** — monotonous word order, genitive chaining,
+  overuse of "который", excessive passive voice.
+- **Style** — facelessness, emotional neutrality, encyclopedic
+  style, absence of conversational elements, inappropriate metaphors.
+- **English calques** — "является" instead of zero copula, "делать" as a
+  universal verb, mandatory subject, "иметь" instead of specific
+  verbs.
+- **Content signs** — lack of specifics, logical loops,
+  absence of context, hallucinations.
 
-**КРИТИЧЕСКИ: не переходи к трансформации, не выписав найденные маркеры
-явным списком.** Выведи результат в формате:
+**CRITICAL: do not proceed to transformation without listing the found markers
+explicitly.** Output the result in the following format:
 
 ```
-### Результат диагностики
+### Diagnostic Result
 
-**Лексические клише:** [список найденных маркеров или «не найдены»]
-**Структурные паттерны:** [список: «правило трёх», «не X, а Y», однотипные начала абзацев, ...]
-**Синтаксис:** [список: монотонная длина предложений, нанизывание родительных падежей, ...]
-**Стиль:** [список: ровный тон, объяснительная интонация, отсутствие личности, ...]
-**Английские кальки:** [список или «не найдены»]
-**Содержательные признаки:** [список: отсутствие конкретики, логические петли, ...]
+**Lexical clichés:** [list of found markers or "none found"]
+**Structural patterns:** [list: "rule of three", "не X, а Y", uniform paragraph openings, ...]
+**Syntax:** [list: monotonous sentence length, genitive chaining, ...]
+**Style:** [list: flat tone, explanatory intonation, absence of personality, ...]
+**English calques:** [list or "none found"]
+**Content signs:** [list: lack of specifics, logical loops, ...]
 
-**Итого маркеров:** N (если 3+ — текст почти наверняка машинный)
+**Total markers:** N (3+ = text almost certainly machine-generated)
 ```
 
-### Шаг 2 — Трансформация: удаление AI-маркеров с учётом регистра
+### Step 2 — Transformation: removing AI markers while respecting the register
 
-Применяй приёмы ВЫБОРОЧНО: какие маркеры найдены + какой регистр определён.
+Apply techniques SELECTIVELY: which markers were found + which register was determined.
 
-**Ключевое правило:** трансформация НЕ должна менять регистр. Научный текст
-остаётся научным, разговорный — разговорным. Убираем только неестественность
-от AI-генерации, а не жанровые особенности регистра.
+**Key rule:** transformation must NOT change the register. Scientific text
+remains scientific, conversational remains conversational. Remove only the unnaturalness
+of AI generation, not the genre traits of the register.
 
-Полный каталог приёмов с таблицами дозировки по регистрам — в
-[references/transformations.md](references/transformations.md). Загрузи этот
-файл перед трансформацией. Ниже — критически важные правила, которые нельзя
-нарушать:
+The full catalog of techniques with dosage tables by register is in
+[references/transformations.md](references/transformations.md). Load this
+file before transformation. Below are the critically important rules that must
+not be violated:
 
-**Универсальные правила (все регистры):**
+**Universal rules (all registers):**
 
-- «Осуществить» → «сделать» (разг.), «провести» (науч.), «выполнить» (оф.-дел.)
-- «Функционировать» → «работать» (все регистры)
-- «Обладать» → конкретный глагол по смыслу
-- **Выпрямляй «не X, а Y»** — единственный приём, работающий во ВСЕХ
-  регистрах. Это чисто AI-паттерн. «Важно не количество, а качество» →
-  «Важно качество».
-- **Убивай банальные метафоры** везде. «Как дом без фундамента» выдаёт AI
-  в любом регистре.
-- **Добавляй конкретику** (цифры, имена, даты, названия) — универсальный
-  приём. Но не выдумывай: если точных данных нет — оставь общую формулировку.
+- "Осуществить" → "сделать" (conv.), "провести" (sci.), "выполнить" (off.-bus.)
+- "Функционировать" → "работать" (all registers)
+- "Обладать" → a concrete verb based on meaning
+- **Straighten "не X, а Y"** — the only technique that works in ALL
+  registers. This is a pure AI pattern. "Важно не количество, а качество" →
+  "Важно качество".
+- **Kill banal metaphors** everywhere. "Как дом без фундамента" reveals AI
+  in any register.
+- **Add specifics** (numbers, names, dates, titles) — a universal
+  technique. But do not invent: if exact data is unavailable, leave the general formulation.
 
-**Критические ограничения по регистрам:**
+**Critical restrictions by register:**
 
-- **Научный:** НЕЛЬЗЯ парцелляцию, риторические вопросы, частицы («ну»,
-  «вот», «ведь», «-то»), идиомы, личное «я». Пассивный залог и «является» —
-  норма. Авторское «мы» допустимо.
-- **Официально-деловой:** НЕЛЬЗЯ разговорные элементы любого рода, личный
-  голос, риторические вопросы, парцелляцию. Жанровые клише («в соответствии
-  с», «на основании») СОХРАНЯТЬ — это не AI-штампы.
-- **Разговорный/Публицистический:** можно частицы, идиомы, личный голос —
-  но дозированно (≤1 частица на абзац, ≤1 идиома на 500–1000 знаков).
+- **Научный:** NO parcellation, rhetorical questions, particles ("ну",
+  "вот", "ведь", "-то"), idioms, personal "я". Passive voice and "является" are
+  normal. Authorial "мы" is allowed.
+- **Официально-деловой:** NO conversational elements of any kind, personal
+  voice, rhetorical questions, parcellation. Genre clichés ("в соответствии
+  с", "на основании") MUST BE PRESERVED — these are not AI stamps.
+- **Разговорный/Публицистический:** particles, idioms, personal voice allowed —
+  but dosed (≤1 particle per paragraph, ≤1 idiom per 500–1000 characters).
 
-### Шаг 3 — Финальная проверка
+### Step 3 — Final verification
 
-После правки пройдись чек-листом. Полный список с регистро-зависимыми
-критериями и антипаттернами — в
-[references/checklist.md](references/checklist.md). Загрузи этот файл
-перед проверкой.
+After editing, run through the checklist. The full list with register-dependent
+criteria and anti-patterns is in
+[references/checklist.md](references/checklist.md). Load this file
+before verification.
 
-**Универсальные критерии (все регистры):**
+**Universal criteria (all registers):**
 
-- [ ] В тексте нет ни одного маркера из каталога лексических клише
-- [ ] Убраны шаблонные противопоставления «не X, а Y»
-- [ ] Убраны или заменены банальные метафоры
-- [ ] Смысл исходного текста сохранён
-- [ ] Нет выдуманных фактов — вся добавленная конкретика реальна
-- [ ] Английские кальки устранены
-- [ ] Убран AI-канцелярит: «является» как связка (кроме науч. и оф.-дел.),
-      «представляет собой» (кроме науч. и оф.-дел.)
+- [ ] The text contains none of the markers from the lexical cliché catalog
+- [ ] Template contrasts "не X, а Y" have been removed
+- [ ] Banal metaphors have been removed or replaced
+- [ ] The meaning of the source text is preserved
+- [ ] No fabricated facts — all added specifics are real
+- [ ] English calques are eliminated
+- [ ] AI bureaucratese removed: "является" as a copula (except Научный and Официально-деловой),
+      "представляет собой" (except Научный and Официально-деловой)
 
-**Обязательный тест на оверкоррекцию:**
-прочитай текст и спроси — «Мог ли этот текст быть написан человеком в этом
-жанре?» Если научная статья звучит как пост из TikTok — регистр нарушен,
-откатывай разговорные правки. Если в научном/деловом тексте есть «ну»,
-«ведь», «-то», идиомы или вставленное «я» — немедленно удали.
+**Mandatory overcorrection test:**
+read the text and ask — "Could this text have been written by a human in this
+genre?" If a scientific article sounds like a TikTok post — the register is violated,
+roll back conversational edits. If a scientific or business text contains "ну",
+"ведь", "-то", idioms, or an inserted "я" — remove immediately.
 
-## Важные принципы
+## Key principles
 
-1. **Не навреди смыслу.** Стиль вторичен по отношению к содержанию.
-2. **Регистр — закон.** НЕ понижай регистр. Научный текст не должен
-   становиться разговорным.
-3. **Не перебарщивай.** Разговорные элементы работают на контрасте:
-   ≤1 частица на абзац в публицистике, 0 в научном и деловом.
-4. **Проверяй факты.** Лучше оставить общую формулировку, чем выдумать цифру.
-5. **Имитируй автора, а не «среднего носителя».** Живой русский в научной
-   статье — не тот же, что в Telegram-чате.
-6. **Органичная неравномерность > механическая равномерность.** Человеческий
-   текст отличается неравномерной глубиной и стилистическими перепадами,
-   а не набором «человеческих» словечек.
-7. **Если сомневаешься — не меняй.** Консервативная правка лучше агрессивной
-   трансформации.
+1. **Do not harm meaning.** Style is secondary to content.
+2. **Register is law.** Do NOT lower the register. A scientific text must not
+   become conversational.
+3. **Do not overdo it.** Conversational elements work on contrast:
+   ≤1 particle per paragraph in publicist text, 0 in scientific and business.
+4. **Verify facts.** Better to leave a general formulation than to invent a number.
+5. **Imitate the author, not the "average speaker."** Lively Russian in a scientific
+   article is not the same as in a Telegram chat.
+6. **Organic unevenness > mechanical evenness.** Human
+   text is characterized by uneven depth and stylistic variation,
+   not a collection of "human-like" wordlets.
+7. **If in doubt — don't change.** Conservative editing is better than aggressive
+   transformation.
 
-## Антипаттерны (чего не делать)
+## Anti-patterns (what not to do)
 
-Полный каталог — в [references/checklist.md](references/checklist.md).
+Full catalog is in [references/checklist.md](references/checklist.md).
 
-**Кратко:**
+**In brief:**
 
-- ❌ Понижать регистр (научный → разговорный).
-- ❌ Вставлять «я» в формальный текст.
-- ❌ Спамить разговорными словечками в любом регистре.
-- ❌ Добавлять идиомы в научный и деловой текст.
-- ❌ Менять «является» на «это» в научном и деловом стиле (там это норма).
-- ❌ Убирать жанровые канцеляризмы в официально-деловом тексте.
-- ❌ Создавать «механические эмоции» — вставлять «я считаю» без смысловой
-  нагрузки.
-- ❌ Превращать каждый абзац в риторический вопрос.
-- ❌ Заменять одну равномерность другой (все предложения стали короткими
-  или все абзацы начинаются с частицы).
+- ❌ Lowering the register (Научный → Разговорный).
+- ❌ Inserting "я" into formal text.
+- ❌ Spamming conversational words in any register.
+- ❌ Adding idioms to scientific and business text.
+- ❌ Changing "является" to "это" in scientific and business style (it's normal there).
+- ❌ Removing genre-specific bureaucratese in Официально-деловой text.
+- ❌ Creating "mechanical emotions" — inserting "я считаю" without semantic
+  weight.
+- ❌ Turning every paragraph into a rhetorical question.
+- ❌ Replacing one uniformity with another (all sentences became short
+  or all paragraphs start with a particle).
