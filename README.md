@@ -53,6 +53,7 @@ Skills for writing secure, idiomatic, production-ready Go applications — from 
 | Skill | Description |
 | ----- | ----------- |
 | [**vibe-brain**](development/vibe-brain/SKILL.md) | Analyzes the project codebase, documentation, and memory to identify the single highest-priority task to work on right now. |
+| [**code-review**](development/code-review/SKILL.md) | Comprehensive code review for evaluating code changes — identifies bugs, logic errors, security issues, structural problems, performance concerns, and unintended behavior changes. |
 
 #### Secure Go
 
