@@ -508,6 +508,132 @@ for csproj in *.csproj; do
 done
 echo ""
 
+# --- Agentic AI Indicators (OWASP Top 10 for Agentic Applications 2026) ---
+# Security relevance: these signal that the project builds AI agents that plan,
+# act, call tools, remember, or communicate with other agents. When ANY of these
+# are present, the agentic threat model applies — in addition to classical
+# controls. Maps to ASI01-ASI10 (see SKILL.md and template.md).
+echo "## Agentic AI Indicators (OWASP Top 10 for Agentic Applications 2026)"
+echo "(Presence triggers the agentic threat-model section: ASI01-ASI10)"
+# --- LLM / Inference SDKs ---
+if [ -f "package.json" ]; then
+  for lib in openai @anthropic-ai/sdk @google/generative-ai @google/genai groq-sdk ai @ai-sdk/openai @ai-sdk/anthropic ollama mistralai; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (LLM SDK): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in openai anthropic google-generativeai google-genai groq ollama mistralai vertexai; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (LLM SDK): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (LLM SDK): $lib"
+  done
+fi
+if [ -f "go.mod" ]; then
+  for lib in sashabaranov/go-openai google/generative-ai-go; do
+    grep -q "$lib" go.mod 2>/dev/null && echo "- go (LLM SDK): $lib"
+  done
+fi
+if [ -f "Cargo.toml" ]; then
+  for lib in async-openai genai; do
+    grep -q "\"$lib\"" Cargo.toml 2>/dev/null && echo "- rust (LLM SDK): $lib"
+  done
+fi
+if [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+  src_file="pom.xml"
+  [ -f "build.gradle" ] && src_file="build.gradle"
+  [ -f "build.gradle.kts" ] && src_file="build.gradle.kts"
+  for lib in spring-ai dev.langchain4j; do
+    grep -q "$lib" "$src_file" 2>/dev/null && echo "- java (LLM SDK): $lib"
+  done
+fi
+# --- Agent frameworks / orchestration (ASI01/ASI02/ASI10) ---
+if [ -f "package.json" ]; then
+  for lib in langchain @langchain/core @langchain/community langgraph @langchain/langgraph @langchain/langgraph-sdk; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (agent framework): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in langchain langchain-core langchain-community langgraph crewai autogen pyautogen autogen-agentchat semantic-kernel haystack dspy llama-index llama_index phidata agno; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (agent framework): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (agent framework): $lib"
+  done
+fi
+if [ -f "go.mod" ]; then
+  for lib in tmc/langchaingo; do
+    grep -q "$lib" go.mod 2>/dev/null && echo "- go (agent framework): $lib"
+  done
+fi
+if [ -f "Cargo.toml" ]; then
+  for lib in langchain-rust rig-core; do
+    grep -q "\"$lib\"" Cargo.toml 2>/dev/null && echo "- rust (agent framework): $lib"
+  done
+fi
+# --- MCP (Model Context Protocol) — tool registries, ASI04 supply chain ---
+if [ -f "package.json" ]; then
+  for lib in @modelcontextprotocol/sdk; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (MCP): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in mcp; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (MCP): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (MCP): $lib"
+  done
+fi
+if [ -f "go.mod" ]; then
+  for lib in mark3labs/mcp-go modelcontextprotocol/go-sdk; do
+    grep -q "$lib" go.mod 2>/dev/null && echo "- go (MCP): $lib"
+  done
+fi
+if [ -f "Cargo.toml" ]; then
+  for lib in rmcp; do
+    grep -q "\"$lib\"" Cargo.toml 2>/dev/null && echo "- rust (MCP): $lib"
+  done
+fi
+# --- MCP / tool config files ---
+for mcpfile in .mcp.json mcp.json mcp-config.json .cursor/mcp.json; do
+  [ -f "$mcpfile" ] && echo "- MCP config file present: $mcpfile"
+done
+# --- Vector stores / persistent memory (ASI06) ---
+if [ -f "package.json" ]; then
+  for lib in chromadb @chroma-core/default-embed @pinecone-database/pinecone weaviate-ts-client @qdrant/js-client-rest vectordb; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (vector store): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in chromadb pinecone pinecone-client weaviate-client qdrant-client pymilvus faiss-cpu pgvector; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (vector store): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (vector store): $lib"
+  done
+fi
+if [ -f "go.mod" ]; then
+  for lib in pgvector/pgvector-go weaviate/weaviate-go-client qdrant/go-client; do
+    grep -q "$lib" go.mod 2>/dev/null && echo "- go (vector store): $lib"
+  done
+fi
+if [ -f "Cargo.toml" ]; then
+  for lib in qdrant-client; do
+    grep -q "\"$lib\"" Cargo.toml 2>/dev/null && echo "- rust (vector store): $lib"
+  done
+fi
+# --- Prompt / agent instruction files (ASI01 vectors & ASI06 memory) ---
+for pfile in AGENTS.md CLAUDE.md .cursorrules .windsurfrules .github/copilot-instructions.md; do
+  [ -f "$pfile" ] && echo "- Agent/prompt instruction file: $pfile"
+done
+find . -maxdepth 3 \( -name '*.prompt' -o -name '*.prompt.txt' -o -name 'system_prompt*' -o -name 'system-prompt*' \) \
+  -not -path '*/node_modules/*' -not -path '*/.git/*' 2>/dev/null | head -10 | while read -r f; do
+  echo "- Prompt file: $f"
+done
+[ -d "prompts" ] && echo "- prompts/ directory present"
+# --- Agentic summary flag ---
+if grep -rEq "\"(openai|@anthropic-ai/sdk|@google/generative-ai|langchain|@langchain/core|langgraph|@modelcontextprotocol/sdk|chromadb|ai)\"" package.json 2>/dev/null \
+  || grep -qiE "^(openai|anthropic|langchain|langgraph|crewai|autogen|chromadb|mcp|google-generativeai|llama-index)\b" requirements.txt pyproject.toml 2>/dev/null \
+  || grep -qE "sashabaranov/go-openai|tmc/langchaingo|mark3labs/mcp-go" go.mod 2>/dev/null; then
+  echo "- AGENTIC PROJECT DETECTED: generate the OWASP Top 10 for Agentic Applications (ASI01-ASI10) section"
+else
+  echo "- No strong agentic indicators: agentic section may be omitted (classical controls suffice)"
+fi
+echo ""
+
 # --- CMS / Heavy Frameworks (large attack surface) ---
 echo "## CMS / Monoliths (large attack surface)"
 if [ -f "composer.json" ]; then
@@ -597,6 +723,24 @@ xxe_count=$(grep -rIlE '(xml\.etree|DocumentBuilder|SAXParser|XmlDocument\.Load|
   --include="*.py" --include="*.java" --include="*.cs" --include="*.php" . 2>/dev/null \
   | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
 echo "- Files with XXE-prone XML parsing: $xxe_count"
+
+# --- Agentic Dangerous Patterns (ASI02 / ASI05 / ASI07) ---
+echo "## Agentic Dangerous Patterns"
+# Tool / function-calling definitions (ASI02 tool misuse surface)
+toolcall_count=$(grep -rIlE '("type"[[:space:]]*:[[:space:]]*"function"|function_call|tool_calls|tools[[:space:]]*:[[:space:]]*\[|@tool|FunctionTool|registerTool|register_tool)' \
+  --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.java" . 2>/dev/null \
+  | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
+echo "- Files with tool/function-calling definitions (ASI02): $toolcall_count"
+# Inter-agent delegation / orchestration patterns (ASI07 / ASI10)
+delegate_count=$(grep -rIlE '(delegate_to|delegateto|forward_to|orchestrator|subagent|sub_agent|multi.?agent|handoff)' \
+  --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.java" . 2>/dev/null \
+  | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
+echo "- Files with inter-agent delegation/orchestration (ASI07/ASI10): $delegate_count"
+# Human-in-the-loop / approval gates (ASI09 — presence indicates a control)
+hitl_count=$(grep -rIlE '(require_approval|require-human-approval|human_in_the_loop|human-in-the-loop|approval_required|askUser|ask_user)' \
+  --include="*.py" --include="*.js" --include="*.ts" --include="*.go" . 2>/dev/null \
+  | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
+echo "- Files with human-approval gates (ASI09 control indicator): $hitl_count"
 echo ""
 
 # --- Version / Release Info ---

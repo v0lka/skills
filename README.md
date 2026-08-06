@@ -44,7 +44,7 @@ Skills for security analysis and policy generation.
 
 | Skill                                                                   | Description                                                                                                                                              |
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**security-policy-generator**](security/security-policy-generator/SKILL.md) | Analyze a project repository and generate a comprehensive SECURITY.md with threat model, security architecture, and secure coding guidelines. |
+| [**security-policy-generator**](security/security-policy-generator/SKILL.md) | Analyze a project repository and generate a comprehensive SECURITY.md with threat model, security architecture, secure coding guidelines, and OWASP Top 10 for Agentic Applications (ASI01–ASI10) coverage. |
 
 ### Development
 

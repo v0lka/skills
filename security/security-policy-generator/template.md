@@ -55,6 +55,12 @@ as architecture evolves. A lightweight threat model is better than none. }}
 | Application secrets      | Critical    | Signing keys, DB credentials        |
 | Business logic integrity | High        | Transaction correctness, audit logs |
 | Availability             | Medium      | Uptime, rate limits                 |
+| Agent system prompts     | High        | System/role prompts — extraction reveals guardrails & logic |
+| Agent credentials & tool secrets | Critical | API keys/OAuth tokens the agent holds; scope = blast radius |
+| Agent memory & context   | High/Critical | Long-term memory, vector DB contents, conversation history |
+| Tool & MCP definitions   | Medium/High  | Tool schemas, descriptions, permission mappings |
+| Agent-generated artifacts | Medium      | Code, plans, API calls produced by agent execution |
+| Training / embedding data | High        | Fine-tune datasets, embeddings (poisoning vector) |
 }}
 
 ### Threat Actors
@@ -66,6 +72,10 @@ as architecture evolves. A lightweight threat model is better than none. }}
 - **Malicious insider** — employee or contractor with partial system access
 - **Compromised supply chain** — malicious dependency, compromised CI/CD
 - **AI coding agent (misconfigured)** — overly permissive agent introducing vulnerabilities
+- **Prompt-injection adversary (ASI01/ASI06)** — plants hostile instructions in documents, web pages, tool outputs, or memory that the agent reads and follows
+- **Malicious tool / plugin author (ASI04)** — publishes a compromised tool, MCP server, or schema with deceptive descriptions to exploit dynamic integration
+- **Compromised agent identity (ASI03/ASI07)** — forges or inherits agent credentials to act with delegated authority or impersonate another agent
+- **Trust exploitation target (ASI09)** — the human operator who over-trusts confident agent output and skips verification
 }}
 
 ### Attack Surface
@@ -80,6 +90,13 @@ as architecture evolves. A lightweight threat model is better than none. }}
 - Dependency supply chain (npm, PyPI, Go modules, etc.)
 - Administrative interfaces
 - Infrastructure (cloud metadata, network exposure)
+- **Agent prompt inputs** — user messages, RAG-retrieved documents, web pages, and tool outputs that enter the model context (ASI01 indirect injection)
+- **Agent tool / function-calling surface** — every tool the agent may invoke, including side-effecting operations (ASI02)
+- **External tool & MCP registries** — dynamically integrated tools, plugins, and schemas whose descriptions and permissions may be forged (ASI04)
+- **Agent-generated code / shell execution** — sandboxed or unsandboxed environments running model output (ASI05)
+- **Agent memory stores** — vector DBs, long-term memory, and conversation logs writable by the agent (ASI06)
+- **Inter-agent message channels** — orchestration buses, delegation protocols, and message queues between agents (ASI07)
+- **Human approval / HITL gates** — review steps where prompt-injection or approval-fatigue attacks exploit operator trust (ASI09)
 }}
 
 ### Trust Boundaries
@@ -102,6 +119,35 @@ as architecture evolves. A lightweight threat model is better than none. }}
 ┌────────────────────▼────────────────────────────┐
 │  Data Layer (Database, Object Storage, Secrets)  │
 └──────────────────────────────────────────────────┘
+```
+
+{{ If the project includes agentic components (agents that plan, act, call tools,
+or communicate with other agents), add the agent trust boundaries. The most
+important boundary is the one between **trusted developer instructions** and
+**untrusted content the agent reads at runtime**, because both arrive as natural
+language the model treats identically (root cause of ASI01).
+
+```
+┌──────────────────────────────────────────────────────┐
+│  Developer / Operator zone (trusted instructions)    │
+│  System prompts, tool definitions, guardrails        │
+└───────────────────┬──────────────────────────────────┘
+                    │ instruction/data separation
+┌───────────────────▼──────────────────────────────────┐
+│  Agent reasoning zone (semi-trusted, boundary scope) │
+│  Model context, plans, tool-call decisions           │
+└─────────────────┬─┬──────────────────────────────────┘
+    untrusted     │ │  least-agency enforcement
+    content in ───┘ └──→ side-effecting tools
+┌──────────────────────────────────────────────────────┐
+│  Untrusted content sources (ASI01 vectors)           │
+│  User input, RAG docs, web pages, tool outputs       │
+└──────────────────────────────────────────────────────┘
+                    │ per-agent identity + authZ
+┌───────────────────▼──────────────────────────────────┐
+│  Execution / Action zone (tools, APIs, shells, DBs)  │
+│  Memory stores, inter-agent channels (ASI06/ASI07)   │
+└──────────────────────────────────────────────────────┘
 ```
 }}
 
@@ -174,6 +220,208 @@ Incident response:
 - Link to incident response runbook
 - Roles and responsibilities
 - Post-incident review process
+}}
+
+---
+
+## Agentic Application Security
+
+{{ This section applies to projects that build AI agents — systems that
+plan, act, call tools, remember across sessions, or communicate with other
+agents on behalf of users. It follows the OWASP Top 10 for Agentic
+Applications (2026), identifiers ASI01–ASI10.
+
+If the project is a pure chatbot or RAG setup with NO tool use and NO
+multi-agent coordination, classical controls and the OWASP Top 10 for LLM
+Applications suffice; this section may be omitted. The moment the system
+takes actions on behalf of a user, this section is REQUIRED.
+
+A single core principle runs through every category below: **least agency** —
+grant an agent only the minimum autonomy required to complete a safe, bounded
+task, the agentic counterpart of least privilege. One that passes the least
+privilege test (correct reach) can still fail the least agency test (excessive
+latitude within that reach). Ask both about every agent you deploy.
+
+Fill each subsection based on what the codebase actually implements. For risks
+with no current mitigation, document them in Known Risks above. }}
+
+### ASI01 — Agent Goal Hijacking
+
+{{ An attacker redirects what the agent is trying to accomplish, usually through
+text the agent reads. Agents represent plans in natural language, so a trusted
+instruction from the user and a hostile instruction hidden inside a retrieved
+document look identical to the model.
+
+Patterns: direct goal manipulation, indirect instruction injection (via RAG
+docs / tool outputs / web pages / emails), recursive hijacking (a modified goal
+propagates through the agent's own reasoning chain), cross-context injection.
+
+Document:
+- Instruction/data separation — how trusted system instructions are delimited from untrusted retrieved content
+- Input/output filtering — sanitization and classification of content entering context
+- Privilege separation between user instructions and data
+- Canary tokens / prompt-extraction detection
+- Whether outputs of untrusted sources are treated as data, never as commands
+}}
+
+### ASI02 — Tool Misuse and Exploitation
+
+{{ The agent abuses tools it is legitimately permitted to use, through loops,
+unsafe chaining, or runaway volume. Traditional access control has no answer,
+because every individual action is allowed.
+
+Patterns: recursive tool calls that loop until resources are exhausted, unsafe
+tool composition (individually harmless tools become dangerous in sequence),
+tool budget exhaustion from sheer invocation volume, cross-tool state leakage.
+
+Document:
+- Per-tool permission scoping (least privilege for each tool)
+- Parameter schemas validated before execution (type, range, allowlists)
+- Dangerous operations (DELETE, DROP, EXEC, send payment) programmatically restricted regardless of agent request
+- Tool-call allowlist (not denylist), rate/budget limits, loop-depth caps
+- Human-approval gates for irreversible or high-impact actions
+}}
+
+### ASI03 — Agent Identity and Privilege Abuse
+
+{{ Delegated authority or unclear agent identity leads to actions nobody
+authorized. An orchestration agent holding credentials for five downstream
+agents is a single point of compromise with the combined permissions of all six.
+
+Patterns: agent impersonation, cross-agent trust abuse, identity inheritance
+(privileges assumed through a chain), role bypass, confused-deputy attacks.
+
+Document:
+- Whether each agent operates with its own verified identity
+- Agent credential scoping (minimum required, rotated regularly)
+- Confused-deputy prevention — can a low-privilege caller trick a high-privilege agent?
+- Audit logging with the verified principal identity on every action
+- Whether delegation chains preserve and record the original caller
+}}
+
+### ASI04 — Agentic Supply Chain Compromise
+
+{{ External agents, tools, schemas, or prompts that the agent trusts and imports
+are themselves compromised. Unlike classical software supply chain, composition
+happens at runtime — the agent may discover and integrate tools dynamically.
+
+Patterns: schema manipulation, description deception (a tool's own description
+misleads the agent), permission misrepresentation, registry poisoning.
+
+Document:
+- Third-party tools, MCP servers, and plugins vetted and pinned to specific versions
+- Tool descriptions reviewed for manipulative language before integration
+- Provenance verification for frameworks, model files, and dependencies
+- Sandbox testing of new/updated tools before production
+- Whether dynamic tool discovery is allowed and how it is constrained
+}}
+
+### ASI05 — Unexpected Code Execution
+
+{{ Code the agent generates or triggers runs without adequate validation or
+isolation. This is the most familiar risk to appsec teams, which cuts both ways
+— familiarity tempts teams to assume existing controls cover paths a developer
+never approved.
+
+Patterns: agent-generated code run without validation, direct shell command
+invocation, unsafe evaluation of dynamic expressions, command injection through
+agent output.
+
+Document:
+- Sandbox isolation for code execution (restricted FS, no network unless needed)
+- Human approval (REVIEW gate) for high-risk execution
+- Scanning of execution arguments for malicious patterns
+- Ephemeral, cleaned-up execution environments
+- Resource limits (CPU, memory, time) on executed code
+}}
+
+### ASI06 — Memory and Context Poisoning
+
+{{ Injected or leaked memory shapes reasoning and actions long after the
+injection happened. Persistence makes this worse than goal hijack — clean up the
+poisoned source and the poison may still sit in the agent's memory store,
+influencing decisions weeks later.
+
+Patterns: long-term memory store corruption, malicious context insertion,
+reasoning-state alteration across sessions, sensitive memory-content leak.
+
+Document:
+- Validation of persistent memory (vector DB, long-term store) before write and read
+- Scanning of memory-destined values for poisoning patterns (instruction overrides, false authorization claims)
+- Ability to identify and purge poisoned memories; monitoring for anomalous writes
+- Session/context isolation so one user's context cannot contaminate another's
+- Retention/TTL policy on agent memory
+}}
+
+### ASI07 — Insecure Inter-Agent Communication
+
+{{ Messages between agents, planners, and executors get intercepted, forged, or
+modified. Multi-agent systems build message buses without consistently applying
+the authentication, encryption, and integrity checks any other bus requires.
+
+Patterns: agent-in-the-middle interception, message injection, message spoofing
+(a forged message appears to come from a trusted agent).
+
+Document:
+- Whether agent-to-agent messages are authenticated and integrity-protected (signed/encrypted)
+- Delegation chain depth limited and monitored
+- Impersonation resistance — can a compromised agent forge another agent or the orchestrator?
+- Explicitly defined cross-agent permissions — does Agent B trust Agent A without verification?
+- Transport security on the message channel (mTLS, signed tokens)
+}}
+
+### ASI08 — Cascading Agent Failures
+
+{{ A small failure propagates through connected tools, dependencies, and trust
+chains. The agentic twist: agents route around failures creatively — a blocked
+tool may trigger an improvised, unvalidated alternative, turning a clean failure
+into an unpredictable one.
+
+Patterns: tool-chain failures, agent-dependency failures, resource-exhaustion
+cascades, broken trust chains.
+
+Document:
+- Circuit breakers to prevent failure propagation across agents
+- Fail-closed behavior (deny actions) when authorization/policy service is unreachable
+- Bulkhead / failure-isolation between agent groups
+- Safe fallback behavior defined per dependency failure
+- Monitoring/alerting for deny-rate spikes and failure cascades
+}}
+
+### ASI09 — Human-Agent Trust Exploitation
+
+{{ People over-trust confident-sounding agent output and skip verification.
+Agents write fluently and never sound unsure; humans reliably read fluency as
+competence, and the times the agent is wrong look exactly like the times it is
+right. The vulnerable component is a person.
+
+Patterns: authority misrepresentation, misleading (plausible, wrong)
+explanations, overconfidence projection, responsibility diffusion.
+
+Document:
+- Whether human approval workflows show raw, unmodified intent (not an agent-generated summary that may deceive)
+- Rate-limiting of high-frequency approval requests (anti-approval-fatigue)
+- AI-generated labeling so operators can calibrate trust
+- Approval justifications generated by the policy engine, not by the agent itself
+- Operator training on "distrust the answer that sounds certain"
+}}
+
+### ASI10 — Rogue Agents
+
+{{ Agents operate outside intended objectives through goal drift, collusion, or
+emergent behavior — without anyone necessarily attacking anything.
+
+Patterns: goal drift (gradual wander from the original objective), agent
+collusion (several agents coordinate toward something unintended), reward
+hacking (optimizing a proxy metric instead of the real goal), runaway autonomy
+(exceeding designed boundaries).
+
+Document:
+- Behavioral-drift monitoring (action volume, deny rate, delegation depth)
+- Full auditable receipt chain — can you reconstruct what happened and why?
+- Kill-switch / circuit-breaker mechanisms to halt anomalous agents
+- Periodic alignment checks (goals verified against operator intent, eval benchmarks)
+- Bounds on autonomy (max steps, max scope, time-boxed sessions)
 }}
 
 ---
@@ -326,6 +574,26 @@ repository:
    from user input without validating against an allowlist.
 
 8. **No sensitive data in logs** — Follow the logging rules above strictly.
+
+9. **No mixing trusted instructions with untrusted data (ASI01)** — When
+   building agent prompts, NEVER concatenate untrusted content (user input,
+   RAG results, tool outputs, web pages) into the instruction stream without
+   delimiters and clear data/instruction separation. Treat all retrieved or
+   tool-produced text as potentially containing adversarial instructions.
+
+10. **No unbounded tool autonomy (ASI02/ASI05)** — Do not wire an agent to
+    invoke side-effecting tools (DB writes, shell, payments, deletions) without
+    a tool-call allowlist, parameter validation, loop/budget caps, and a
+    human-approval gate for irreversible operations.
+
+11. **No unsandboxed agent-generated code execution (ASI05)** — Do not run
+    model-generated code or shell commands outside a sandbox with network
+    restrictions, resource limits, and ephemeral cleanup.
+
+12. **No implicit cross-agent trust (ASI03/ASI07)** — Do not implement
+    agent-to-agent delegation or identity inheritance without per-agent
+    verified identities, scoped credentials, message authentication, and
+    delegation-depth limits.
 }}
 
 ### Behavioral Guidelines for Agents
@@ -353,6 +621,34 @@ repository:
 - **Test security-relevant changes** — When modifying security-critical
   code, include or update relevant test cases that verify the security
   property (e.g., test that unauthenticated requests are rejected).
+}}
+
+{{ Additional guidelines when the project includes AGENTIC components —
+apply the least-agency principle alongside the rules above:
+
+- **Apply least agency (ASI02/ASI10)** — Grant the agent only the minimum
+  autonomy needed for a bounded task: restrict tool sets, cap loop depth
+  and step counts, and scope credentials per-agent rather than per-process.
+
+- **Separate instructions from data (ASI01/ASI06)** — When constructing or
+  editing agent prompts, use explicit delimiters between trusted developer
+  instructions and any untrusted content (retrieved docs, tool output, user
+  text). Assume retrieved text can contain hostile instructions.
+
+- **Prefer fail-closed delegation (ASI07/ASI08)** — When wiring inter-agent
+  communication, default to denying a delegation if the source agent cannot
+  be authenticated or the policy service is unreachable; do not let agents
+  improvise unvalidated fallbacks around a blocked tool.
+
+- **Make agent actions auditable (ASI03/ASI10)** — Ensure every agent action
+  is logged with the verified principal identity, the tool invoked, the
+  arguments, and a reconstructable receipt chain — so a post-incident review
+  can answer "who/what decided this?".
+
+- **Do not auto-approve confident output (ASI09)** — When a change adds or
+  modifies a human-approval gate, ensure the operator sees the raw intended
+  action, not an agent-generated summary; rate-limit repeated approvals to
+  prevent fatigue attacks.
 }}
 
 ---
