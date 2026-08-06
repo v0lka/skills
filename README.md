@@ -6,15 +6,15 @@ A set of AI agent skills designed to solve research and development tasks.
 
 ### Research
 
-General-purpose research and ideation skills.
+General-purpose research and ideation skills. Each skill is independent and addresses a different research intent — from open-ended exploration to structured ideation and in-depth synthesis.
 
 | Skill                                                    | Description                                                                                                                                                                |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**deeper-research**](research/deeper-research/SKILL.md) | Conduct thorough, multi-source research using Tree of Thoughts methodology. Produces cited, multi-perspective syntheses with confidence ratings and evidentiary hierarchy. |
-| [**explore**](research/explore/SKILL.md)                 | Explore → Plan → Implement — a thinking partner for exploring ideas and clarifying requirements, then producing a structured roadmap (What/How/Where/Acceptance criteria) for approval, then implementing it. |
-| [**scamper**](research/scamper/SKILL.md)                 | Transform existing ideas into improved variants using the SCAMPER method (Substitute, Combine, Adapt, Modify, Put to other use, Eliminate, Reverse).                       |
-| [**triz-solver**](research/triz-solver/SKILL.md)         | Solve inventive engineering, product, process, or system-design problems using TRIZ methodology and contradiction resolution.                                              |
-| [**vibe-research**](research/vibe-research/SKILL.md)     | Iterative research copilot for exploratory "vibe research" — progressively sharpens broad topics into high-value lines of inquiry.                                         |
+| [**deeper-research**](research/deeper-research/README.md) | Conduct thorough, multi-source research using Tree of Thoughts methodology. Produces cited, multi-perspective syntheses with confidence ratings and evidentiary hierarchy. |
+| [**explore**](research/explore/README.md)                 | Explore → Plan → Implement — a thinking partner for exploring ideas and clarifying requirements, then producing a structured roadmap (What/How/Where/Acceptance criteria) for approval, then implementing it. |
+| [**scamper**](research/scamper/README.md)                 | Transform existing ideas into improved variants using the SCAMPER method (Substitute, Combine, Adapt, Modify, Put to other use, Eliminate, Reverse).                       |
+| [**triz-solver**](research/triz-solver/README.md)         | Solve inventive engineering, product, process, or system-design problems using TRIZ methodology and contradiction resolution.                                              |
+| [**vibe-research**](research/vibe-research/README.md)     | Iterative research copilot for exploratory "vibe research" — progressively sharpens broad topics into high-value lines of inquiry.                                         |
 
 ### Engineering Research
 
@@ -36,7 +36,7 @@ Skills for building and maintaining AI agent systems.
 
 | Skill                                                 | Description                                                                                                                                                          |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**prompts-review**](agentic/prompts-review/SKILL.md) | Review all prompts in a codebase for optimality, balancing effectiveness and token efficiency. Covers explicit, string-literal, and dynamically constructed prompts. |
+| [**prompts-review**](agentic/prompts-review/README.md) | Review all prompts in a codebase for optimality, balancing effectiveness and token efficiency. Covers explicit, string-literal, and dynamically constructed prompts. |
 
 ### Security
 
@@ -44,7 +44,15 @@ Skills for security analysis and policy generation.
 
 | Skill                                                                   | Description                                                                                                                                              |
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**security-policy-generator**](security/security-policy-generator/SKILL.md) | Analyze a project repository and generate a comprehensive SECURITY.md with threat model, security architecture, secure coding guidelines, and OWASP Top 10 for Agentic Applications (ASI01–ASI10) coverage. |
+| [**security-policy-generator**](security/security-policy-generator/README.md) | Analyze a project repository and generate a comprehensive SECURITY.md with threat model, security architecture, secure coding guidelines, and OWASP Top 10 for Agentic Applications (ASI01–ASI10) coverage. |
+
+### Writing
+
+Skills for text transformation and post-editing of AI-generated content.
+
+| Skill                                       | Description                                                                                                                                                                |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**humanize-ru**](writing/humanize-ru/README.md) | Remove signs of machine generation from Russian-language AI text while preserving its original register and communicative purpose — scientific stays scientific, business stays business. |
 
 ### Development
 
@@ -52,14 +60,14 @@ Skills for writing secure, idiomatic, production-ready Go applications — from 
 
 | Skill | Description |
 | ----- | ----------- |
-| [**vibe-brain**](development/vibe-brain/SKILL.md) | Analyzes the project codebase, documentation, and memory to identify the single highest-priority task to work on right now. |
-| [**code-review**](development/code-review/SKILL.md) | Comprehensive code review for evaluating code changes — identifies bugs, logic errors, security issues, structural problems, performance concerns, and unintended behavior changes. |
+| [**vibe-brain**](development/vibe-brain/README.md) | Analyzes the project codebase, documentation, and memory to identify the single highest-priority task to work on right now. |
+| [**code-review**](development/code-review/README.md) | Comprehensive code review for evaluating code changes — identifies bugs, logic errors, security issues, structural problems, performance concerns, and unintended behavior changes. |
 
 #### Secure Go
 
 | Skill                                           | Description                                                                                                                                                                                                 |
 | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**secure-go**](development/secure-go/SKILL.md) | Write secure Go applications through everyday practices — idiomatic patterns, standard library defaults, OWASP Top 10 coverage, and a security-focused linter setup. Covers access control, data protection, input handling, secure design, configuration, dependencies, authentication, error handling, integrity, logging, external objects, and SSRF. |
+| [**secure-go**](development/secure-go/README.md) | Write secure Go applications through everyday practices — idiomatic patterns, standard library defaults, OWASP Top 10 coverage, and a security-focused linter setup. Covers access control, data protection, input handling, secure design, configuration, dependencies, authentication, error handling, integrity, logging, external objects, and SSRF. |
 
 #### Specification-Driven Development
 
@@ -75,7 +83,7 @@ Skills that implement a Specification-Driven Development workflow — from boots
 
 #### Idiomatic Go
 
-Skills for writing idiomatic, correct, and performant Go code.
+Skills for writing idiomatic, correct, and performant Go code. See [development/idiomatic-go/README.md](development/idiomatic-go/README.md) for how the skills are organized and when to use which.
 
 | Skill                                                                                        | Description                                                                                                  |
 | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
