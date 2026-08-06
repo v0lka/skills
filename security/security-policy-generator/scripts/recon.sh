@@ -127,13 +127,38 @@ if [ -f "docker-compose.yml" ] || [ -f "docker-compose.yaml" ]; then
 fi
 echo ""
 
-# --- Secret Patterns (potential exposure) ---
-echo "## Potential Secret Patterns in Code"
-echo "(Searching for common patterns — false positives expected)"
-# Only search tracked files, skip binary, limit output
-patterns='(API_KEY|SECRET_KEY|PRIVATE_KEY|password\s*=\s*["\x27][^\x27"]+|aws_access_key_id|DATABASE_URL\s*=\s*["\x27])'
-count=$(grep -rIlE "$patterns" --include="*.ts" --include="*.js" --include="*.py" --include="*.go" --include="*.rs" --include="*.java" --include="*.rb" --include="*.env.example" --include="*.yaml" --include="*.yml" . 2>/dev/null | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || count=0
-echo "- Files with potential secret patterns: $count"
+# --- Container Security Signals ---
+# Security relevance: Step 5 container-security domain. Base image provenance and
+# whether a non-root USER is set are architectural facts that determine which
+# container-related threats apply (privilege escalation, image supply chain).
+echo "## Container Security Signals"
+if [ -f "Dockerfile" ]; then
+  base_img=$(grep -iE "^FROM " Dockerfile 2>/dev/null | head -1 | sed 's/^FROM[[:space:]]*//I' || true)
+  [ -n "$base_img" ] && echo "- Dockerfile base image: $base_img"
+  if grep -qiE "^USER " Dockerfile 2>/dev/null; then
+    echo "- Dockerfile USER directive present (non-root intent)"
+  else
+    echo "- Dockerfile: no USER directive (runs as root by default)"
+  fi
+fi
+echo ""
+
+# --- Secret & Config-Loading Patterns (architecture relevance signal) ---
+# Security relevance: Step 2/Step 5. This section detects whether the codebase
+# handles secrets/config at all — that marks the "secret management" domain as
+# applicable to the threat model. It is NOT a leak audit: counts indicate
+# surface area, not compliance findings (see SKILL.md Scope Boundary).
+echo "## Secret & Config-Loading Patterns (relevance signal)"
+echo "(Indicates the secret-management domain applies; not a leak audit)"
+# Env / config-loading patterns present (structural signal — secrets handled in code)
+env_count=$(grep -rIlE '(process\.env|os\.environ|os\.getenv|getenv\(|config\.get|Config\.Get|viper\.Get|envconfig|@Value\(|@ConfigurationProperties|Environment\.getenv)' \
+  --include="*.ts" --include="*.js" --include="*.py" --include="*.go" --include="*.rs" --include="*.java" --include="*.rb" --include="*.cs" . 2>/dev/null \
+  | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || env_count=0
+echo "- Files reading env/config at runtime: $env_count"
+# .env files present
+env_file_count=$(find . -maxdepth 3 -name '.env*' \
+  -not -path '*/node_modules/*' -not -path '*/vendor/*' -not -path '*/.git/*' 2>/dev/null | wc -l | tr -d ' ') || env_file_count=0
+[ "${env_file_count:-0}" -gt 0 ] && echo "- .env files present: $env_file_count"
 echo ""
 
 # --- Web Frameworks ---
@@ -204,6 +229,32 @@ for csproj in *.csproj; do
 done
 echo ""
 
+# --- API Surface / Contracts ---
+# Security relevance: attack-surface sizing. Contract files define the public
+# input boundary (routes, operations, schemas). Their presence signals that the
+# input-validation / AuthZ / rate-limiting domains apply (Step 3 & Step 5).
+echo "## API Surface & Contracts"
+echo "(Contract files define the entry boundary; route counts size the surface)"
+# Contract/spec files
+for spec in openapi.json openapi.yaml openapi.yml swagger.json swagger.yaml \
+            asyncapi.json asyncapi.yaml asyncapi.yml; do
+  [ -f "$spec" ] && echo "- OpenAPI/AsyncAPI spec present: $spec"
+done
+# gRPC proto files
+proto_count=$(find . -maxdepth 4 -name '*.proto' \
+  -not -path '*/node_modules/*' -not -path '*/vendor/*' -not -path '*/.git/*' 2>/dev/null | wc -l | tr -d ' ') || true
+[ "${proto_count:-0}" -gt 0 ] && echo "- gRPC proto files: $proto_count"
+# GraphQL schema files
+gql_count=$(find . -maxdepth 4 \( -name '*.graphql' -o -name 'schema.graphql' -o -name '*.gql' \) \
+  -not -path '*/node_modules/*' -not -path '*/vendor/*' -not -path '*/.git/*' 2>/dev/null | wc -l | tr -d ' ') || true
+[ "${gql_count:-0}" -gt 0 ] && echo "- GraphQL schema files: $gql_count"
+# Route-definition counts across stacks (sizing, not auditing)
+route_count=$(grep -rIlE '(@app\.(get|post|put|delete|patch|route)|@(Get|Post|Put|Delete|Patch|RequestMapping)Mapping|app\.(get|post|put|delete|patch)\(|router\.(Get|Post|Put|Delete|Patch)\(|@(Get|Post|Put|Delete)\(|\.Handle\(|c\.GET\(|\.GET\()' \
+  --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.java" --include="*.cs" --include="*.rb" --include="*.php" . 2>/dev/null \
+  | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
+echo "- Files with route/handler definitions (surface sizing): ${route_count:-0}"
+echo ""
+
 # --- ORM / Database Libraries ---
 # Security relevance: SQL injection, NoSQL injection, credential exposure.
 echo "## ORM / Database Libraries"
@@ -247,6 +298,23 @@ for csproj in *.csproj; do
     grep -q "$lib" "$csproj" 2>/dev/null && echo "- csharp: $lib"
   done
 done
+echo ""
+
+# --- DB Migrations & Schemas ---
+# Security relevance: asset discovery (Step 2). Migrations/schema files are where
+# PII, credentials, and financial columns are declared — the threat model needs to
+# know where sensitive data models live.
+echo "## DB Migrations & Schemas"
+[ -d "migrations" ] && echo "- migrations/ directory present"
+[ -d "db/migrations" ] && echo "- db/migrations/ directory present"
+[ -f "prisma/schema.prisma" ] && echo "- Prisma schema present (prisma/schema.prisma)"
+[ -d "alembic" ] && echo "- Alembic migrations present (alembic/)"
+[ -d "flyway" ] || find . -maxdepth 3 -path '*/db/migration' -type d 2>/dev/null | head -1 | grep -q . && echo "- Flyway migrations present"
+gorm_auto=$(grep -rIl 'AutoMigrate' --include="*.go" . 2>/dev/null | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
+[ "${gorm_auto:-0}" -gt 0 ] && echo "- GORM AutoMigrate calls (Go schema): $gorm_auto files"
+sql_count=$(find . -maxdepth 3 \( -name '*.sql' -o -name '*.ddl' \) \
+  -not -path '*/node_modules/*' -not -path '*/vendor/*' -not -path '*/.git/*' 2>/dev/null | wc -l | tr -d ' ') || true
+[ "${sql_count:-0}" -gt 0 ] && echo "- SQL schema/migration files: $sql_count"
 echo ""
 
 # --- Authentication Libraries ---
@@ -430,6 +498,85 @@ for csproj in *.csproj; do
 done
 echo ""
 
+# --- WebSocket Servers (real-time bidirectional entry points) ---
+# Security relevance: Step 3 attack surface. WebSocket connections bypass many
+# HTTP-centric controls (CSRF tokens, same-origin) and need origin validation,
+# message rate limiting, and AuthZ on connect.
+echo "## WebSocket Servers"
+if [ -f "package.json" ]; then
+  for lib in ws socket.io @fastify/websocket "@socket.io/cluster-adapter" sockjs nanomsg; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm: $lib"
+  done
+fi
+if [ -f "go.mod" ]; then
+  for lib in gorilla/websocket coder/websocket gobwas/ws nhooyr.io/websocket; do
+    grep -q "$lib" go.mod 2>/dev/null && echo "- go: $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in websockets aiohttp wsproto autobahn; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python: $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python: $lib"
+  done
+fi
+if [ -f "Cargo.toml" ]; then
+  for lib in tokio-tungstenite tungstenite axum; do
+    grep -q "\"$lib\"" Cargo.toml 2>/dev/null && echo "- rust: $lib"
+  done
+fi
+for csproj in *.csproj; do
+  [ -f "$csproj" ] || continue
+  for lib in Microsoft.AspNetCore.WebSockets System.Net.WebSockets; do
+    grep -q "$lib" "$csproj" 2>/dev/null && echo "- csharp: $lib"
+  done
+done
+ws_count=$(grep -rIlE '(Upgrade.*websocket|WebSocket\(|on\s*\(\s*[''"]connection[''"]|@app\.websocket|c\.WebSocket|HandleWebSocket)' \
+  --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.java" --include="*.cs" . 2>/dev/null \
+  | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
+[ "${ws_count:-0}" -gt 0 ] && echo "- Files with WebSocket handlers: $ws_count"
+echo ""
+
+# --- Async / Messaging / Webhook Receivers ---
+# Security relevance: Step 3 attack surface. Message consumers and webhook
+# receivers process untrusted external input asynchronously — they are entry
+# points that need input validation and AuthZ just like HTTP routes.
+echo "## Async / Messaging / Webhook Receivers"
+if [ -f "package.json" ]; then
+  for lib in bull bullmq agenda kafkajs amqplib rsmq sqs-consumer "@aws-sdk/client-sqs" "@aws-sdk/client-sns" "@aws-sdk/client-eventbridge" mqtt typed-rx-emitter; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm: $lib"
+  done
+fi
+if [ -f "go.mod" ]; then
+  for lib in IBM/sarama segmentio/kafka-go rabbitmq/amqp091-go nats-io/nats-go nsqio/nsqgo redis/go-redis aws/aws-sdk-go-v2/service/sqs aws/aws-sdk-go-v2/service/sns; do
+    grep -q "$lib" go.mod 2>/dev/null && echo "- go: $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in kafka-python confluent-kafka pika redis-rq hq dramatiq huey aio-pika; do
+    grep -qiE "^${lib}" requirements.txt 2>/dev/null && echo "- python: $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python: $lib"
+  done
+  # Celery / RQ are often declared without a version pin
+  grep -qiE "^(celery|rq)" requirements.txt pyproject.toml 2>/dev/null && echo "- python: celery/rq (task queue)"
+fi
+if [ -f "Gemfile" ]; then
+  for lib in sidekiq shoryuken sneakers bunny; do
+    grep -q "$lib" Gemfile 2>/dev/null && echo "- ruby: $lib"
+  done
+fi
+for csproj in *.csproj; do
+  [ -f "$csproj" ] || continue
+  for lib in MassTransit Hangfire Azure.Messaging.ServiceBus Confluent.Kafka RabbitMQ.Client; do
+    grep -q "$lib" "$csproj" 2>/dev/null && echo "- csharp: $lib"
+  done
+done
+# Webhook-receiver handlers (framework-agnostic signature)
+webhook_count=$(grep -rIlE '(/webhook|webhook_handler|@app\.post.*webhook|register_webhook|handle_event|process_event)' \
+  --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.java" --include="*.rb" --include="*.php" . 2>/dev/null \
+  | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
+[ "${webhook_count:-0}" -gt 0 ] && echo "- Files with webhook/event-handler patterns: $webhook_count"
+echo ""
+
 # --- GraphQL Libraries ---
 echo "## GraphQL Libraries"
 if [ -f "package.json" ]; then
@@ -506,6 +653,85 @@ for csproj in *.csproj; do
     grep -q "$lib" "$csproj" 2>/dev/null && echo "- csharp: $lib"
   done
 done
+echo ""
+
+# --- Security Domain Libraries (architecture-relevance signals) ---
+# Security relevance: Step 5. Each library below marks a security DOMAIN as
+# applicable to this architecture (not an audit of correctness). The threat
+# model and coding rules must cover every domain flagged here.
+echo "## Security Domain Libraries (relevance signals)"
+# Rate limiting
+if [ -f "package.json" ]; then
+  for lib in express-rate-limit "@fastify/rate-limit" koa-ratelimit express-slow-down; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (rate-limiting): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in slowapi flask-limiter; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (rate-limiting): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (rate-limiting): $lib"
+  done
+fi
+for csproj in *.csproj; do
+  [ -f "$csproj" ] || continue
+  grep -q "AspNetCoreRateLimit" "$csproj" 2>/dev/null && echo "- csharp (rate-limiting): AspNetCoreRateLimit"
+done
+# CSRF
+if [ -f "package.json" ]; then
+  for lib in csurf; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (CSRF): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  grep -qiE "^(flask-wtf|django.middleware.csrf)" requirements.txt pyproject.toml 2>/dev/null && echo "- python (CSRF): flask-wtf / django csrf middleware"
+fi
+# Security headers
+if [ -f "package.json" ]; then
+  for lib in helmet secure; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (security-headers): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in flask-talisman django-csp; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (security-headers): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (security-headers): $lib"
+  done
+fi
+# Crypto
+if [ -f "package.json" ]; then
+  grep -q "\"node:crypto\"" package.json 2>/dev/null && echo "- npm (crypto): node:crypto"
+fi
+if [ -f "go.mod" ]; then
+  grep -q "crypto/aes\|crypto/cipher\|golang.org/x/crypto" go.mod 2>/dev/null && echo "- go (crypto): golang.org/x/crypto / crypto/aes"
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in cryptography pynacl; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (crypto): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (crypto): $lib"
+  done
+fi
+if [ -f "Cargo.toml" ]; then
+  for lib in aes ring rustls libsodium-sys; do
+    grep -q "\"$lib\"" Cargo.toml 2>/dev/null && echo "- rust (crypto): $lib"
+  done
+fi
+# Secret management SDKs
+if [ -f "package.json" ]; then
+  for lib in "@aws-sdk/client-secrets-manager" "@aws-sdk/client-ssm"; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (secret-mgmt): $lib"
+  done
+fi
+if [ -f "go.mod" ]; then
+  for lib in hashicorp/vault aws/aws-sdk-go-v2/service/secretsmanager; do
+    grep -q "$lib" go.mod 2>/dev/null && echo "- go (secret-mgmt): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in hvac boto3; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (secret-mgmt): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (secret-mgmt): $lib"
+  done
+fi
 echo ""
 
 # --- Agentic AI Indicators (OWASP Top 10 for Agentic Applications 2026) ---
@@ -615,6 +841,76 @@ if [ -f "Cargo.toml" ]; then
     grep -q "\"$lib\"" Cargo.toml 2>/dev/null && echo "- rust (vector store): $lib"
   done
 fi
+# --- LLM gateways / proxies (ASI03/ASI04 — agent identity & supply chain) ---
+if [ -f "package.json" ]; then
+  for lib in litellm portkey-ai "@llamaindex/portkey" helicone; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (LLM gateway/proxy): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in litellm portkey-ai; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (LLM gateway/proxy): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (LLM gateway/proxy): $lib"
+  done
+fi
+# --- Guardrails / policy engines (ASI01/ASI02/ASI09 — input/output filtering, approval) ---
+if [ -f "package.json" ]; then
+  for lib in guardrails "@guardrails-ai/core" lattice-llm; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (guardrails/policy): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in guardrails-ai nemoguardrails guardrails; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (guardrails/policy): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (guardrails/policy): $lib"
+  done
+fi
+# --- Code-execution sandboxes (ASI05 — agent-generated code / shell) ---
+if [ -f "package.json" ]; then
+  for lib in "@e2b/code-interpreter" e2b modalsandbox; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (code-exec sandbox): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in e2b codeinterpreter_api; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (code-exec sandbox): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (code-exec sandbox): $lib"
+  done
+fi
+if [ -f "go.mod" ]; then
+  for lib in e2b-dev/E2B; do
+    grep -q "$lib" go.mod 2>/dev/null && echo "- go (code-exec sandbox): $lib"
+  done
+fi
+# Sandbox-as-container pattern: docker used as exec backend for agent code
+docker_exec=$(grep -rIlE '(runCode|exec_sandbox|execute_code|code_interpreter|sandbox_exec|run_python|runSandbox)' \
+  --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.java" . 2>/dev/null \
+  | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
+[ "${docker_exec:-0}" -gt 0 ] && echo "- Files with code-execution/sandbox patterns (ASI05): $docker_exec"
+# --- LLM observability / tracing (ASI08/ASI10 — auditable receipt chain, cascade monitoring) ---
+if [ -f "package.json" ]; then
+  for lib in langfuse helicone "@arize/phoenix-openinference"; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (LLM observability): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in langfuse helicone arize opentelemetry-instrumentation-openai; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (LLM observability): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (LLM observability): $lib"
+  done
+fi
+# --- Eval / alignment frameworks (ASI10 — periodic alignment checks) ---
+if [ -f "package.json" ]; then
+  for lib in promptfoo; do
+    grep -q "\"$lib\"" package.json 2>/dev/null && echo "- npm (eval/alignment): $lib"
+  done
+fi
+if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+  for lib in deepeval ragas promptfoo; do
+    grep -qiE "^$lib" requirements.txt 2>/dev/null && echo "- python (eval/alignment): $lib"
+    grep -qi "$lib" pyproject.toml 2>/dev/null && echo "- python (eval/alignment): $lib"
+  done
+fi
 # --- Prompt / agent instruction files (ASI01 vectors & ASI06 memory) ---
 for pfile in AGENTS.md CLAUDE.md .cursorrules .windsurfrules .github/copilot-instructions.md; do
   [ -f "$pfile" ] && echo "- Agent/prompt instruction file: $pfile"
@@ -625,9 +921,9 @@ find . -maxdepth 3 \( -name '*.prompt' -o -name '*.prompt.txt' -o -name 'system_
 done
 [ -d "prompts" ] && echo "- prompts/ directory present"
 # --- Agentic summary flag ---
-if grep -rEq "\"(openai|@anthropic-ai/sdk|@google/generative-ai|langchain|@langchain/core|langgraph|@modelcontextprotocol/sdk|chromadb|ai)\"" package.json 2>/dev/null \
-  || grep -qiE "^(openai|anthropic|langchain|langgraph|crewai|autogen|chromadb|mcp|google-generativeai|llama-index)\b" requirements.txt pyproject.toml 2>/dev/null \
-  || grep -qE "sashabaranov/go-openai|tmc/langchaingo|mark3labs/mcp-go" go.mod 2>/dev/null; then
+if grep -rEq "\"(openai|@anthropic-ai/sdk|@google/generative-ai|@google/genai|langchain|@langchain/core|langgraph|@modelcontextprotocol/sdk|chromadb|ai|litellm|portkey-ai|guardrails-ai|nemoguardrails|guardrails|e2b|langfuse|helicone|crewai|phidata|agno|@e2b/code-interpreter)\"" package.json 2>/dev/null \
+  || grep -qiE "^(openai|anthropic|langchain|langgraph|crewai|autogen|pyautogen|chromadb|mcp|google-generativeai|google-genai|llama-index|llama_index|litellm|portkey-ai|guardrails-ai|nemoguardrails|guardrails|e2b|langfuse|helicone|deepeval|ragas|promptfoo|phidata|agno)\b" requirements.txt pyproject.toml 2>/dev/null \
+  || grep -qE "sashabaranov/go-openai|tmc/langchaingo|mark3labs/mcp-go|e2b-dev/E2B" go.mod 2>/dev/null; then
   echo "- AGENTIC PROJECT DETECTED: generate the OWASP Top 10 for Agentic Applications (ASI01-ASI10) section"
 else
   echo "- No strong agentic indicators: agentic section may be omitted (classical controls suffice)"
@@ -695,9 +991,13 @@ if [ -f "go.mod" ]; then
   echo ""
 fi
 
-# --- Dangerous Code Patterns ---
-echo "## Dangerous Code Patterns"
-echo "(Searching for risky patterns — potential security concerns)"
+# --- Security-Relevant Code Patterns (domain-relevance signals) ---
+# Security relevance: Step 5. Counts below indicate which classical threat
+# domains apply to this architecture (injection, deserialization, dynamic
+# execution, XXE). They are relevance signals for the threat model and coding
+# rules — NOT compliance findings (see SKILL.md Scope Boundary).
+echo "## Security-Relevant Code Patterns (relevance signals)"
+echo "(Indicates which threat domains apply; not a compliance audit)"
 # Subprocess / command execution
 subprocess_count=$(grep -rIlE '(exec\.Command|subprocess\.(run|Popen|call)|child_process\.(exec|spawn)|Process\.Start|Runtime\.getRuntime|system\s*\(|shell_exec\s*\(|passthru\s*\()' \
   --include="*.go" --include="*.py" --include="*.js" --include="*.ts" --include="*.java" --include="*.php" --include="*.rb" --include="*.cs" . 2>/dev/null \
@@ -723,9 +1023,14 @@ xxe_count=$(grep -rIlE '(xml\.etree|DocumentBuilder|SAXParser|XmlDocument\.Load|
   --include="*.py" --include="*.java" --include="*.cs" --include="*.php" . 2>/dev/null \
   | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
 echo "- Files with XXE-prone XML parsing: $xxe_count"
+echo ""
 
-# --- Agentic Dangerous Patterns (ASI02 / ASI05 / ASI07) ---
-echo "## Agentic Dangerous Patterns"
+# --- Agentic Pattern Signals (ASI relevance indicators) ---
+# Security relevance: Step 6. Counts below show which ASI categories are
+# architecturally relevant (tool-calling → ASI02, delegation → ASI07, HITL →
+# ASI09). Relevance signals for the agentic threat model — not a compliance
+# verdict (see SKILL.md Scope Boundary).
+echo "## Agentic Pattern Signals (ASI relevance indicators)"
 # Tool / function-calling definitions (ASI02 tool misuse surface)
 toolcall_count=$(grep -rIlE '("type"[[:space:]]*:[[:space:]]*"function"|function_call|tool_calls|tools[[:space:]]*:[[:space:]]*\[|@tool|FunctionTool|registerTool|register_tool)' \
   --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.java" . 2>/dev/null \
@@ -740,7 +1045,7 @@ echo "- Files with inter-agent delegation/orchestration (ASI07/ASI10): $delegate
 hitl_count=$(grep -rIlE '(require_approval|require-human-approval|human_in_the_loop|human-in-the-loop|approval_required|askUser|ask_user)' \
   --include="*.py" --include="*.js" --include="*.ts" --include="*.go" . 2>/dev/null \
   | grep -v node_modules | grep -v vendor | grep -v '.git/' | wc -l | tr -d ' ') || true
-echo "- Files with human-approval gates (ASI09 control indicator): $hitl_count"
+echo "- Files with human-approval gates (ASI09 relevance indicator): $hitl_count"
 echo ""
 
 # --- Version / Release Info ---

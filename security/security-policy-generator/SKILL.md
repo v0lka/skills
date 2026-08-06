@@ -1,11 +1,28 @@
 ---
 name: security-policy-generator
-description: Analyze a project repository and generate a comprehensive SECURITY.md with threat model, security architecture, and secure coding guidelines — covering both classical security and the OWASP Top 10 for Agentic Applications 2026 (ASI01–ASI10). Use when the user asks to create a security policy, generate a threat model, fill in a SECURITY.md template, or assess project security posture.
+description: Analyze a project repository and build a project-specific threat model, then derive from it the secure coding rules that go into SECURITY.md — covering both classical security and the OWASP Top 10 for Agentic Applications 2026 (ASI01–ASI10). Use when the user asks to create a security policy, generate a threat model, or establish secure coding rules for a repository.
 ---
 
 # Security Policy Generator
 
 Generate a project-specific SECURITY.md by analyzing the codebase, dependencies, configuration, and architecture. The output covers: supported versions, vulnerability reporting, threat model, security architecture, secure coding rules, and AI agent constraints.
+
+> ### ⛔ Scope Boundary — read before doing anything
+>
+> This skill does exactly **two things** and nothing more:
+>
+> 1. **Build an adequate threat model** for *this specific project* — its assets, attack surface, trust boundaries, and the threats that apply given its real architecture and stack.
+> 2. **Derive secure coding rules** from that threat model, for both human contributors and coding agents.
+>
+> This skill does **NOT** audit the project for compliance with the policy it builds, and it does **NOT** record any such audit results in SECURITY.md. Specifically, the agent MUST NOT:
+>
+> - Check whether the existing codebase already satisfies the rules it just wrote, or grade the project against the OWASP/ASI categories ("control present / gap / not applicable").
+> - Populate SECURITY.md with findings about what is missing, broken, misconfigured, or non-compliant in the current code (e.g., "input validation absent on endpoint X", "rate limiting missing", "ASI01: no mitigation found").
+> - Turn SECURITY.md into a code-review or penetration-test report.
+>
+> A *threat* describes what **could** go wrong given the architecture (forward-looking): "because this service exposes a public API, injection is a relevant threat → therefore the coding rules require parameterized queries and input validation at all boundaries." A *compliance finding* describes what the code **currently** lacks — that belongs in a review report, an audit, or the issue tracker, **never** in SECURITY.md.
+>
+> The codebase is studied only to understand the architecture well enough to model threats accurately and to tailor the coding rules to the real stack — never to score the project against the policy.
 
 This skill produces a policy that covers **two complementary risk domains**:
 
@@ -24,8 +41,8 @@ Task Progress:
 - [ ] Step 2: Identify assets and data flows (incl. agent assets)
 - [ ] Step 3: Map attack surface (incl. agentic entry points)
 - [ ] Step 4: Assess dependencies and supply chain
-- [ ] Step 5: Document security controls in place
-- [ ] Step 6: Agentic risk assessment — OWASP ASI01–ASI10
+- [ ] Step 5: Identify security-relevant architecture (what domains apply)
+- [ ] Step 6: Identify relevant agentic threats — OWASP ASI01–ASI10
 - [ ] Step 7: Derive secure coding rules
 - [ ] Step 8: Generate SECURITY.md
 - [ ] Step 9: Register SECURITY.md in AGENTS.md
@@ -187,55 +204,60 @@ cargo audit 2>/dev/null || true
 
 ---
 
-## Step 5: Document Security Controls in Place
+## Step 5: Identify Security-Relevant Architecture
 
-Identify what security measures already exist. Look for:
+The goal here is **not** to audit whether the codebase's existing controls are correct or complete — that is out of scope (see Scope Boundary). The goal is to recognize which security *domains* this architecture actually involves, so the threat model (Step 3) and the coding rules (Step 7) cover the right ground and stay relevant to the real stack rather than listing every generic control.
 
-| Category           | What to find                                                |
-| ------------------ | ----------------------------------------------------------- |
-| AuthN              | Middleware enforcing authentication, token validation logic |
-| AuthZ              | Role checks, permission guards, policy engines              |
-| Input validation   | Schema validation (zod, joi, pydantic), sanitization        |
-| CSRF protection    | Token generation/validation middleware                      |
-| Rate limiting      | Rate limiter middleware, API gateway config                 |
-| Encryption         | TLS config, field-level encryption, at-rest encryption      |
-| Secret management  | Vault integration, KMS usage, env-only secrets              |
-| Logging & audit    | Structured logging setup, audit trail implementation        |
-| Security headers   | Helmet.js, manual header setting, CSP                       |
-| Container security | Non-root user, minimal base image, read-only FS             |
-| Agent guardrails (agentic) | Instruction/data separation, prompt-injection filtering, output classification |
-| Tool-call governance (agentic) | Per-tool least privilege, allowlist, parameter validation, budget/loop caps |
-| Code-exec sandboxing (agentic) | Isolated env, restricted FS/network, human-approval gates for model-generated code |
-| Memory protection (agentic) | Write/read validation on vector stores & long-term memory, session isolation, TTL |
-| Inter-agent security (agentic) | Authenticated/signed messages, delegation-depth limits, fail-closed delegation |
-| Resilience (agentic) | Circuit breakers, bulkheads, kill-switch, behavioral-drift monitoring |
+Scan the codebase to answer one question per domain: **"Is this domain relevant to how this system is built?"** Use the categories below as a checklist of domains to consider:
 
-For each control found, note:
+| Category           | What "relevant" means here                                              |
+| ------------------ | ----------------------------------------------------------------------- |
+| AuthN              | The system authenticates anyone (users, services) — middleware, tokens, sessions |
+| AuthZ              | The system distinguishes permissions — roles, guards, policy engines    |
+| Input validation   | The system accepts external input — API params, CLI args, file uploads, webhooks |
+| CSRF protection    | The system has browser-facing state-changing endpoints                  |
+| Rate limiting      | The system exposes public or shared endpoints                           |
+| Encryption         | The system stores or transmits sensitive data                          |
+| Secret management  | The system handles secrets — API keys, DB credentials, signing keys     |
+| Logging & audit    | The system produces security-relevant events worth recording            |
+| Security headers   | The system serves HTML/web content to browsers                          |
+| Container security | The system ships as a container image                                   |
+| Agent guardrails (agentic) | The system builds agents that consume untrusted content in-context (ASI01) |
+| Tool-call governance (agentic) | The system's agents invoke side-effecting tools (ASI02)         |
+| Code-exec sandboxing (agentic) | The system runs agent-generated code or shell commands (ASI05)   |
+| Memory protection (agentic) | The system persists agent memory/vector stores across sessions (ASI06) |
+| Inter-agent security (agentic) | The system coordinates multiple agents over a message channel (ASI07) |
+| Resilience (agentic) | The system chains agents/tools whose failures could cascade (ASI08)   |
 
-- Where it's implemented (file + line)
-- Coverage (all routes? only some?)
-- Any gaps or inconsistencies
+For each domain you mark relevant, note only enough to inform the threat model and rules:
+
+- **Why it's relevant** — the architectural reason (e.g., "public REST API with session cookies → CSRF domain applies")
+- **What the rules must address** — the concrete concerns the coding rules will need to cover for this domain
+
+Do **not** record implementation locations, coverage gaps, or "what's missing" — those are review findings, not policy inputs.
 
 ---
 
-## Step 6: Agentic Risk Assessment — OWASP Top 10 for Agentic Applications (ASI01–ASI10)
+## Step 6: Identify Relevant Agentic Threats — OWASP Top 10 for Agentic Applications (ASI01–ASI10)
 
 > **Conditional step.** Skip entirely if Step 1 did not detect agentic components (the recon script prints `No strong agentic indicators`). For a pure chatbot / RAG system with no tool use and no multi-agent coordination, classical controls and the OWASP Top 10 for LLM Applications suffice. The moment the system takes actions on behalf of a user, this step is **required**.
 
-For each ASI category below, assess the project against the checklist. Use the existing agentic review conventions from [code-review/references/review-guide.md](../../development/code-review/references/review-guide.md) for consistency. Record findings as: **control present** (file + coverage), **gap** (→ Known Risks), or **not applicable** (justify).
+> **Not an audit.** As with Step 5, the goal is **not** to score the current codebase ("does it pass ASI02?"). It is to determine, per category, whether the threat **applies** to how this system is built, and if so, what the coding rules (Step 7) and the threat-model entries must require. Do **not** record "control present / gap / not applicable" verdicts against the existing code, and do **not** push anything into Known Risks based on what the code currently lacks.
 
 The unifying principle is **least agency** — grant an agent only the minimum autonomy required for a safe, bounded task. Ask, for every agent: what is its reach (least privilege) AND what is its latitude within that reach (least agency)?
 
-- [ ] **ASI01 — Agent Goal Hijacking.** Is all content entering the agent context (user input, tool outputs, external docs, web pages) treated as potentially hostile? Are trusted instructions delimited from untrusted data? Is there defense-in-depth (sanitization, output filtering, privilege separation)? Canary tokens / prompt-extraction detection?
-- [ ] **ASI02 — Tool Misuse and Exploitation.** Are tools granted minimum permissions? Are call arguments validated (schemas, regex, allowlists)? Are dangerous operations (DELETE/DROP/EXEC) programmatically restricted regardless of agent request? Tool allowlist, budget/loop caps, human-approval gates?
-- [ ] **ASI03 — Agent Identity and Privilege Abuse.** Does each agent use a verified identity? Is it scoped/rotated? Are confused-deputy attacks prevented? Is every action logged with the verified principal? Are delegation chains preserving the original caller?
-- [ ] **ASI04 — Agentic Supply Chain Compromise.** Are third-party tools/MCP servers/plugins pinned and vetted? Are tool descriptions reviewed for deceptive language? Is provenance verified? Are new tools sandboxed before production?
-- [ ] **ASI05 — Unexpected Code Execution.** Is agent-generated/shell code sandboxed (isolated FS, no network unless needed)? Human approval for high-risk execution? Argument scanning? Ephemeral cleanup? Resource limits?
-- [ ] **ASI06 — Memory and Context Poisoning.** Is persistent memory (vector DB, long-term store) validated before write/read? Scanned for poisoning patterns? Can poisoned memories be purged? Is session context isolated? Retention/TTL?
-- [ ] **ASI07 — Insecure Inter-Agent Communication.** Are agent-to-agent messages authenticated/integrity-protected? Delegation-depth limited/monitored? Impersonation resistance? Explicitly defined cross-agent permissions? Transport security (mTLS, signed tokens)?
-- [ ] **ASI08 — Cascading Agent Failures.** Circuit breakers? Fail-closed when policy service unreachable? Bulkheads? Safe fallback per dependency? Monitoring for deny-rate spikes / cascades?
-- [ ] **ASI09 — Human-Agent Trust Exploitation.** Do approval workflows show raw intent (not an agent summary)? Rate-limited against approval fatigue? AI-generated labeling? Policy-engine-generated justifications (not agent-generated)?
-- [ ] **ASI10 — Rogue Agents.** Behavioral-drift monitoring? Full auditable receipt chain? Kill-switch / circuit-breaker? Periodic alignment checks? Bounds on autonomy (max steps, time-boxed sessions)?
+For each category, answer two questions only: **(a) Is this threat relevant given the architecture? (b) If yes, what must the rules require?** Skip any category the architecture provably doesn't involve, noting why.
+
+- [ ] **ASI01 — Agent Goal Hijacking.** Relevant when agents ingest untrusted content (user input, tool outputs, retrieved docs, web pages) into context. If so, the rules must require instruction/data separation, input/output filtering, privilege separation between instructions and data, and treating all retrieved/tool-produced text as data.
+- [ ] **ASI02 — Tool Misuse and Exploitation.** Relevant when agents can call tools, especially side-effecting ones. If so, the rules must require per-tool least privilege, validated parameter schemas, restriction of dangerous operations regardless of agent request, a tool-call allowlist, budget/loop caps, and approval gates for irreversible actions.
+- [ ] **ASI03 — Agent Identity and Privilege Abuse.** Relevant when agents act under delegated or inherited credentials. If so, the rules must require per-agent verified identities, scoped/rotated credentials, confused-deputy prevention, and action logging with the verified principal.
+- [ ] **ASI04 — Agentic Supply Chain Compromise.** Relevant when third-party tools, MCP servers, or plugins are integrated (especially dynamically). If so, the rules must require pinning/vetting, description review, provenance verification, and sandboxing of new tools.
+- [ ] **ASI05 — Unexpected Code Execution.** Relevant when agent-generated code or shell commands run. If so, the rules must require sandbox isolation (restricted FS/network), approval gates for high-risk execution, argument scanning, ephemeral cleanup, and resource limits.
+- [ ] **ASI06 — Memory and Context Poisoning.** Relevant when agent memory/vector stores persist across sessions. If so, the rules must require write/read validation, poisoning-pattern scanning, purge capability, session isolation, and retention/TTL.
+- [ ] **ASI07 — Insecure Inter-Agent Communication.** Relevant when agents exchange messages over a bus or delegation protocol. If so, the rules must require authenticated/integrity-protected messages, delegation-depth limits, impersonation resistance, defined cross-agent permissions, and transport security.
+- [ ] **ASI08 — Cascading Agent Failures.** Relevant when agents/tools are chained such that one failure propagates. If so, the rules must require circuit breakers, fail-closed behavior, bulkheads, per-dependency fallback, and cascade monitoring.
+- [ ] **ASI09 — Human-Agent Trust Exploitation.** Relevant when human approval/HITL gates exist. If so, the rules must require showing raw intent (not agent summaries), approval rate-limiting, AI-generated labeling, and policy-engine-generated justifications.
+- [ ] **ASI10 — Rogue Agents.** Relevant when agents operate with any autonomy (drift, collusion, runaway). If so, the rules must require behavioral-drift monitoring, an auditable receipt chain, a kill-switch/circuit-breaker, periodic alignment checks, and autonomy bounds (max steps, time-boxed sessions).
 
 ---
 
@@ -285,8 +307,8 @@ Use the template from [template.md](template.md) and fill in each section with d
 | Threat Actors                 | Standard list, adjusted to project's exposure level               |
 | Attack Surface                | Step 3 output                                                     |
 | Trust Boundaries              | Infer from architecture (edge → app → data layer); add agent trust boundaries if agentic |
-| Known Risks                   | Findings from Steps 3-5 and Step 6 where no mitigation exists     |
-| Security Architecture         | Step 5 output                                                     |
+| Known Risks                   | Inherent architectural risks the design knowingly accepts (e.g., "MVP uses a single shared DB user") — **never** a list of what the current code is missing vs. the policy; compliance findings do not go here |
+| Security Architecture         | Step 5 output — which security domains apply to this architecture and what the policy requires of each |
 | Agentic Application Security  | Step 6 output (ASI01–ASI10) — include only if agentic indicators detected |
 | Secure Coding Guidelines      | Step 7 output                                                     |
 | Rules for AI Coding Agents    | Derived from stack + project-specific patterns + agentic constraints (ASI09/ASI10) |
@@ -366,8 +388,9 @@ After generating, verify:
 - [ ] Revision history has today's date
 - [ ] AGENTS.md exists and references SECURITY.md
 - [ ] AGENTS.md does NOT duplicate security rules (only references them)
-- [ ] If agentic indicators were detected: ASI01–ASI10 section present, each category assessed (control/gap/N/A), and gaps moved to Known Risks
+- [ ] If agentic indicators were detected: ASI01–ASI10 section present, with each applicable category stating what the rules require (non-applicable categories justified and skipped)
 - [ ] If no agentic indicators: the Agentic Application Security section is explicitly omitted with a one-line note (no stale placeholders)
+- [ ] **No audit findings in the document** — SECURITY.md contains no statements grading the current code against the policy (e.g., "missing rate limiting on /api/x", "ASI02: no mitigation found", "input validation absent"). Known Risks lists only inherent architectural trade-offs the design knowingly accepts, never code-compliance gaps.
 
 ---
 
@@ -382,6 +405,6 @@ The document will be read by:
 - Security researchers evaluating the project
 - New contributors learning project security standards
 - AI coding agents operating on the codebase
-- Auditors reviewing security posture
+- Auditors reviewing the security policy
 
 Write in clear, imperative, technical language. Avoid marketing fluff. Prefer concrete over abstract.

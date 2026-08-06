@@ -1,5 +1,7 @@
 # Security Policy
 
+> **This is a security *policy*, not an audit report.** It defines the project's threat model and the secure coding rules every contributor and coding agent must follow. It does **not** record whether the current codebase complies with these rules — compliance verification belongs in code review, audits, or the issue tracker, never in this file.
+
 ## Supported Versions
 
 {{ Use this section to tell people about which versions of your project are
@@ -153,18 +155,26 @@ language the model treats identically (root cause of ASI01).
 
 ### Known Risks & Accepted Trade-offs
 
-{{ Document risks that are known but accepted, along with rationale.
+{{ List inherent architectural risks that the design knowingly accepts as a
+trade-off — NOT findings about what the current code is missing versus this
+policy. A known risk here is a design-level decision (e.g., "MVP runs all
+services behind a single shared database user to reduce operational overhead"),
+not a compliance gap ("input validation not yet implemented on endpoint Y").
+Compliance gaps belong in code review or the issue tracker, never in this file.
 
 | Risk                              | Severity | Mitigation / Rationale                |
 | --------------------------------- | -------- | ------------------------------------- |
-| Example: No rate limiting on X    | Medium   | Accepted for MVP; tracked in #1234    |
+| Example: Single shared DB user for MVP | Medium   | Accepted to reduce ops overhead; tracked in #1234 |
 }}
 
 ---
 
 ## Security Architecture
 
-{{ Use this section to document technical security controls in place. }}
+{{ Use this section to describe the security domains this architecture involves
+and what the policy requires of each. Frame each subsection around what
+contributors and agents MUST do (the rules and expectations), not an inventory
+of what the code currently implements or lacks. }}
 
 ### Authentication & Authorization
 
@@ -242,8 +252,7 @@ task, the agentic counterpart of least privilege. One that passes the least
 privilege test (correct reach) can still fail the least agency test (excessive
 latitude within that reach). Ask both about every agent you deploy.
 
-Fill each subsection based on what the codebase actually implements. For risks
-with no current mitigation, document them in Known Risks above. }}
+Fill each subsection with the **rules and requirements** this project imposes for that category — what contributors and agents MUST do. Do NOT turn this into a checklist of whether the current code passes each category; that is an audit and does not belong in SECURITY.md. }}
 
 ### ASI01 — Agent Goal Hijacking
 
