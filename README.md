@@ -75,6 +75,7 @@ Skills that implement a Specification-Driven Development workflow — from boots
 
 | Skill                                                              | Description                                                                                                                     |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| [**vibespec-explore**](development/sdd/vibespec-explore/SKILL.md) | Spec-aware thinking partner: grounds exploration in the project's spec system, turns unclear requirements into an approved roadmap (What/How/Where/Spec footprint/Acceptance criteria), then implements it while keeping specs synchronized. |
 | [**vibespec-init**](development/sdd/vibespec-init/SKILL.md)       | Initialize a specification system for a project from scratch by analyzing the codebase and generating the initial set of specs. |
 | [**vibespec-create**](development/sdd/vibespec-create/SKILL.md)   | Create a new specification document following the project's spec system templates and conventions.                              |
 | [**vibespec-consult**](development/sdd/vibespec-consult/SKILL.md) | Proactively consult project specifications before making structural changes to avoid violating documented invariants.           |
