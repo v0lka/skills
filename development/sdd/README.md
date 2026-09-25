@@ -1,6 +1,6 @@
 # Specification-Driven Development Skills
 
-A set of six [Agent Skills](https://agentskills.io/specification) that implement a **Specification-Driven Development** workflow for AI agents. The skills manage the complete lifecycle of project specifications — from bootstrapping a spec system for an existing codebase to keeping specs aligned with code as it evolves.
+A set of [Agent Skills](https://agentskills.io/specification) that implement a **Specification-Driven Development** workflow for AI agents. The skills manage the complete lifecycle of project specifications — from bootstrapping a spec system for an existing codebase to keeping specs aligned with code as it evolves.
 
 All artifacts are plain Markdown files in a `specs/` directory. No wiki engine, database, or external service is required.
 
