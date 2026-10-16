@@ -6,14 +6,16 @@ A set of AI agent skills designed to solve research and development tasks.
 
 ### Research
 
-General-purpose research and ideation skills. Each skill is independent and addresses a different research intent — from open-ended exploration to structured ideation and in-depth synthesis.
+General-purpose research, paper study, and ideation skills. Each skill is independent and addresses a different research intent — from open-ended exploration and focused engineering experiments to structured ideation and in-depth synthesis.
 
 | Skill                                                    | Description                                                                                                                                                                |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**deeper-research**](research/deeper-research/README.md) | Conduct thorough, multi-source research using Tree of Thoughts methodology. Produces cited, multi-perspective syntheses with confidence ratings and evidentiary hierarchy. |
 | [**explore**](research/explore/README.md)                 | Explore → Plan → Implement — a thinking partner for exploring ideas and clarifying requirements, then producing a structured roadmap (What/How/Where/Acceptance criteria) for approval, then implementing it. |
+| [**fordec-research**](research/fordec-research/SKILL.md) | Conduct rapid engineering R&D through iterative FORDEC cycles, competing hypotheses, and minimum viable experiments, with user input at every stage and user-controlled completion. |
 | [**know-hower**](research/know-hower/README.md)           | Audit technical and domain know-how across a project, compare public analogues and direct publication, and produce an evidence-based report with a proposed `.aiignore` for manual review. |
 | [**scamper**](research/scamper/README.md)                 | Transform existing ideas into improved variants using the SCAMPER method (Substitute, Combine, Adapt, Modify, Put to other use, Eliminate, Reverse).                       |
+| [**study-paper**](research/study-paper/README.md) | Study, skim, critically appraise, reproduce, compare, and teach research papers, explicitly separating what a paper claims from what it demonstrates. |
 | [**triz-solver**](research/triz-solver/README.md)         | Solve inventive engineering, product, process, or system-design problems using TRIZ methodology and contradiction resolution.                                              |
 | [**vibe-research**](research/vibe-research/README.md)     | Iterative research copilot for exploratory "vibe research" — progressively sharpens broad topics into high-value lines of inquiry.                                         |
 
@@ -57,7 +59,7 @@ Skills for text transformation and post-editing of AI-generated content.
 
 ### Development
 
-Skills for writing secure, idiomatic, production-ready Go applications — from specification to correct code.
+Skills for task prioritization, code review, specification-driven development, and writing secure, idiomatic, production-ready Go applications.
 
 | Skill | Description |
 | ----- | ----------- |
