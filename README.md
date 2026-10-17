@@ -48,6 +48,7 @@ Skills for security analysis and policy generation.
 | Skill                                                                   | Description                                                                                                                                              |
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**security-policy-generator**](security/security-policy-generator/README.md) | Analyze a project repository and generate a comprehensive SECURITY.md with threat model, security architecture, secure coding guidelines, and OWASP Top 10 for Agentic Applications (ASI01–ASI10) coverage. |
+| [**security-review**](security/security-review/README.md) | Security review of code changes and codebases — OWASP Top 10 for Web Applications 2021/2025, OWASP Agentic ASI01–ASI10, business-logic flaws, and data races/race conditions. Proves each finding with a realistic attack scenario, maps it to CWEs, prioritizes by CVSS v4.0, and runs ecosystem scanners (govulncheck, npm audit, cargo audit, pip-audit, …). |
 
 ### Writing
 
