@@ -2,7 +2,7 @@
 name: security-review
 description: Security review methodology for code changes and codebases. Hunts exploitable vulnerabilities across the OWASP Top 10 for Web Applications (2021 and 2025), the OWASP Top 10 for Agentic Applications (ASI01–ASI10), business-logic flaws, and data races or race conditions. Proves every finding with a realistic attack scenario, maps it to CWEs, prioritizes by CVSS v4.0, and runs ecosystem security scanners (govulncheck, npm audit, cargo audit, pip-audit, and others). Use when reviewing code or dependency changes for security issues, triaging scanner output, or auditing a project against its SECURITY.md.
 license: MIT
-compatibility: Requires read access to a version-controlled code repository. Optional but recommended: installed security scanners for the project's ecosystem (govulncheck, npm audit, cargo audit, pip-audit, semgrep, etc.) and network access for CVE, CWE, and CVSS lookups.
+compatibility: "Requires read access to a version-controlled code repository. Optional but recommended: installed security scanners for the project's ecosystem (govulncheck, npm audit, cargo audit, pip-audit, semgrep, etc.) and network access for CVE, CWE, and CVSS lookups."
 ---
 
 # Security Review
