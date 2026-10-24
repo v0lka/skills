@@ -101,7 +101,7 @@ You: ─────────────────────────
      - Result<string, ExportError> return type — explicit, caller-decides
      - All-or-nothing semantics — no partial export, no retry
      - Factory selects the exporter from a format parameter
-     - Exporters never perform I/O → ADR (keeps the domain layer pure)
+     - Exporters never perform I/O (keeps the domain layer pure)
 
      ## Invariants & Constraints (from specs)
      - The domain layer never imports infrastructure — source:
@@ -165,8 +165,7 @@ You: ─────────────────────────
      **What:** Convert Data to XML.
      **How:** Escape <, >, &, ", '; wrap in a root element.
      **Where:** `src/export/xml-exporter.ts`
-     **Spec footprint:** create `xml-exporter.md`; create ADR for "exporters
-     never perform I/O"; update `specs/INDEX.md`
+     **Spec footprint:** create `xml-exporter.md`; update `specs/INDEX.md`
      **Acceptance criteria:**
      - [ ] Well-formed XML with a root element
      - [ ] Escapes <, >, &, ", '
@@ -189,7 +188,11 @@ You: ─────────────────────────
 
 User: Looks good, go ahead
 
-You: ───────────────────────────────────────────
+You: Approved. One note: none of these decisions pass the ADR bar — they
+     are local to the new export domain and land in its domain spec, so no
+     ADR is warranted here.
+
+     ───────────────────────────────────────────
      Entering Implementation Mode
      Executing roadmap: Multi-format Data Export
      5 tasks total
@@ -222,7 +225,7 @@ You: ─────────────────────────
      [Task 5/5] ✓ XML exporter
        Acceptance criteria: all met
        Files: src/export/xml-exporter.ts
-       Specs: created xml-exporter.md + ADR-004; updated specs/INDEX.md
+       Specs: created xml-exporter.md; updated specs/INDEX.md
        Checks: typecheck ✓, tests ✓
 
      ───────────────────────────────────────────
@@ -236,7 +239,7 @@ You: ─────────────────────────
 
      Spec sync:
        updated:  specs/INDEX.md
-       created:  specs/domains/export/ (README + 3 detail files), ADR-004
+       created:  specs/domains/export/ (README + 3 detail files)
        footprint left open: none
 
      Suggested next: run vibespec-check to confirm the new specs match the code.

@@ -72,7 +72,7 @@ After completing your changes, determine whether any spec needs updating:
 - Did you change documented behavior? → Update the domain spec
 - Did you add/remove/rename an interface? → Update the contract spec
 - Did you add a new component? → Update the domain README's catalog/table
-- Did you make an architectural decision? → Consider creating an ADR
+- Did you make a decision that constrains work beyond the immediate change AND had rejected alternatives, or that contradicts/supersedes a documented ADR or invariant? → Create an ADR; otherwise record the decision in the relevant domain/architecture spec
 
 If specs need updating, invoke the `vibespec-update` or `vibespec-create` skill as appropriate.
 

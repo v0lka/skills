@@ -160,7 +160,7 @@ vibespec-explore ──► vibespec-consult ──► [implementation] ──►
       └────────────────────────────────────────────────────────────────────────────┘
                               (drift or new work re-enters the loop)
 
-vibespec-create ◄── (new spec or ADR when UNDOCUMENTED or a decision is recorded)
+vibespec-create ◄── (new spec or ADR when UNDOCUMENTED or a decision passes the ADR bar)
       │
       ▼
 vibespec-update (INDEX.md registration)
@@ -173,7 +173,7 @@ The typical invocation patterns:
 - **Daily work**: `consult -> implement -> update`
 - **New component**: `consult -> implement -> create + update`
 - **Maintenance**: `check -> update / create`
-- **New architectural decision**: `create` (ADR type)
+- **Decision passing the ADR bar** (constrains work beyond the immediate change AND had rejected alternatives, or supersedes an existing ADR/invariant): `create` (ADR type)
 
 ## Compatibility
 

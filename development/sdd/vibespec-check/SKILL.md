@@ -73,6 +73,7 @@ Categorize each finding:
 | **CROSS_REF_BROKEN** | Referenced spec or section doesn't exist | Link to `domains/auth.md` but file was removed |
 | **UNDOCUMENTED** | Significant code exists with no spec coverage | New module has no corresponding domain spec |
 | **STALE_CONTENT** | Spec documents something that was removed from code | Spec describes a feature that was deleted |
+| **DUPLICATE_ADR_NUMBER** | Two ADR files in `specs/decisions/` share the same leading `NNN` | `008-a.md` and `008-b.md` both exist — parallel branches allocated 008 independently and merged cleanly |
 
 ### Step 5 — Report and ask for each discrepancy
 
@@ -153,6 +154,9 @@ Remaining action items:
 ADRs are historical records and generally don't drift. Check only:
 1. `Status` field — if `Accepted`, verify no contradicting newer ADR exists
 2. Referenced code/specs in Context/Decision — verify they still exist
+3. Duplicate numbers — scan the entire `specs/decisions/` tree for files sharing the same leading `NNN` (parse `NNN` from each `NNN-slug.md` filename and ignore the slug; include superseded ADRs — a retired record keeps its number). Report each contested number with its claimant files.
+
+**DUPLICATE_ADR_NUMBER resolution:** renumber the second-landed record to the next free number per the renumber protocol in `vibespec-create` — update all references (filename, `# ADR-NNN:` heading, supersede links, INDEX.md entries, cross-references in other specs) — then re-run the cross-reference check to catch links broken by the renumbering.
 
 ---
 

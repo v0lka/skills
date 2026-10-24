@@ -24,8 +24,12 @@ implementation.]
 - Decision 2: [what was decided and why]
 - ...
 
-[Mark any decision that is architectural and non-obvious with `→ ADR`: it should
-become an Architecture Decision Record via `vibespec-create` after approval.]
+[Mark with `→ ADR` any decision that meets the ADR bar: it constrains work beyond
+the immediate change AND had real alternatives considered and rejected, OR it
+contradicts/supersedes an existing ADR or documented invariant. Such decisions
+become Architecture Decision Records via `vibespec-create` after approval;
+everything else stays in Decisions Recorded (and, if worth recording, belongs in
+a domain/architecture spec).]
 
 ## Invariants & Constraints (from specs)
 [Invariants, extension points, and anti-patterns gathered from the spec system.
@@ -96,5 +100,5 @@ spec work a task owns so that implementation does not leave specs behind.
   "create via `vibespec-create`".
 - **Carry over `UNDOCUMENTED` findings** — an area flagged during exploration
   becomes a `vibespec-create` footprint entry.
-- **Surface ADRs** — architectural decisions marked `→ ADR` become
+- **Surface ADRs** — decisions meeting the ADR bar, marked `→ ADR`, become
   `vibespec-create` footprints too.

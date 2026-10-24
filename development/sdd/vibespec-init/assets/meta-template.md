@@ -42,7 +42,7 @@ specs/
 - Directories within `domains/`: created when a domain requires multiple files
 - `README.md` inside a domain directory: overview and entry point for that domain
 - `_template.md` prefix: template files (not actual specs)
-- ADR files: `NNN-kebab-case-slug.md` (three-digit number, kebab-case slug)
+- ADR files: `NNN-kebab-case-slug.md` (three-digit number, kebab-case slug; numbers are unique tree-wide — a duplicate reaching the tree is resolved by renumbering the second-landed record)
 
 ## Document Formats
 
@@ -215,7 +215,7 @@ What was evaluated and why it was rejected.
 - After any change that alters documented behavior
 - After adding/removing/renaming interfaces that appear in a contract
 - After changing architectural boundaries or invariants
-- After making a new architectural decision (create ADR)
+- After a decision that passes the ADR bar — constrains work beyond the immediate change (cross-domain, cross-cutting, or hard to reverse) AND had real alternatives considered and rejected, or contradicts/supersedes an existing ADR or documented invariant — create an ADR; otherwise record it in the affected domain spec
 
 ### How to update
 

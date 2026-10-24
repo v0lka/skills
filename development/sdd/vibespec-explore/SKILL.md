@@ -200,7 +200,7 @@ and a per-task **Spec footprint**.
 ```
 Roadmap: <title>
 ├── Overview                    — what is built/changed and why
-├── Decisions Recorded          — every Explore decision; mark architectural ones `→ ADR`
+├── Decisions Recorded          — every Explore decision; mark decisions meeting the ADR criteria `→ ADR`
 ├── Invariants & Constraints    — invariants/anti-patterns from specs, cited to source   (spec-aware)
 ├── Global Constraints          — cross-cutting, non-negotiable rules
 ├── Tasks                       — each: What / How / Where / Spec footprint / Acceptance criteria
@@ -411,7 +411,7 @@ specs did not drift.
 - **Don't skip the spec consult** — run `vibespec-consult` before finalizing
 - **Don't skip the approval gate** — never enter Implementation Mode unapproved
 - **Don't lose decisions** — every Explore decision appears in *Decisions
-  Recorded*; architectural ones are marked `→ ADR`
+  Recorded*; decisions meeting the ADR criteria are marked `→ ADR`
 - **Every task has a Spec footprint** — `none` is a valid, explicit value
 - **Do be specific** — vague tasks produce vague implementations
 - **Do make criteria verifiable** — if you can't tell whether it's met, it's a wish

@@ -76,7 +76,7 @@ Rule: all links are **relative from `specs/`**. Section anchors — lowercase, h
 - After any change that alters documented behavior
 - After adding/removing/renaming interfaces from contracts
 - After changing architectural boundaries or invariants
-- After a new architectural decision → create an ADR
+- After a decision that passes the ADR bar — constrains work beyond the immediate change (cross-domain, cross-cutting, or hard to reverse) AND had real alternatives considered and rejected, or contradicts/supersedes an existing ADR or documented invariant → create an ADR; otherwise record it in the affected domain spec
 
 ### How to Update
 
@@ -117,7 +117,7 @@ After updating, verify:
 
 1. Read `architecture/` specs — understand current rules
 2. Check affected contracts in `contracts/`
-3. **After implementation**: create a new ADR + update affected specs
+3. **After implementation**: update architecture specs and affected contracts; create a new ADR only when the change contradicts a documented decision or invariant
 
 ### "Understand why X is designed a certain way"
 
@@ -130,10 +130,17 @@ After updating, verify:
 
 ### Creating a New ADR
 
-1. Determine the next sequential number (check existing ones in `decisions/`)
+0. **Does the decision pass the ADR bar?** Create an ADR only if it meets BOTH: constrains work beyond the immediate change (cross-domain, cross-cutting, or hard to reverse) AND had real alternatives considered and rejected — OR it contradicts/supersedes an existing ADR or documented invariant. Otherwise record it in the affected domain spec (implementation details, local reversible choices, restatements). If `Alternatives Considered` cannot be filled honestly, it is not an ADR.
+1. Determine the next sequential number — scan all files in `decisions/` including superseded ADRs; numbers are never reused
 2. Copy the template from `decisions/_template.md`
 3. Fill in all sections
 4. Add an entry to `INDEX.md`
+
+A freshly allocated number is provisional until the branch merges — a sibling branch may allocate the same number in the meantime.
+
+#### Parallel branches
+
+Two ADRs may leave different branches with the same number — git merges them cleanly (different filenames). Whoever merges second renumbers their ADR to the next free number (filename + `# ADR-NNN: [Title]` heading) and updates `Superseded by` links in other ADRs, `INDEX.md`, and cross-references to this ADR in other specs.
 
 ### Superseding a Decision
 
@@ -193,6 +200,6 @@ For flows and architecture — ASCII art (not Mermaid), to work without a render
 
 1. **Need to learn something** → `specs/INDEX.md` → find task → go to spec
 2. **Need to change code** → read domain spec + contract → implement → update spec
-3. **Need a new decision** → create ADR → update INDEX.md
+3. **Decision that constrains future work with rejected alternatives** → create ADR → update INDEX.md
 4. **Need to add a spec** → take format from META.md → create file → update INDEX.md
 5. **Formats, rules, templates** → `specs/META.md`

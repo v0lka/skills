@@ -21,7 +21,7 @@ Identify which of the 5 spec types you need to create:
 | **Domain Detail** | New component within an existing domain | `specs/domains/<domain>/<component>.md` |
 | **Contract** | New boundary between layers/modules | `specs/contracts/<layer-a>-<layer-b>.md` |
 | **Architecture** | New system-level concern (layers, security, flow) | `specs/architecture/<topic>.md` |
-| **ADR** | New architectural decision | `specs/decisions/NNN-slug.md` |
+| **ADR** | Decision that passes the ADR bar test (see ADR-specific rules): constrains work beyond the immediate change AND had rejected alternatives, OR supersedes an existing ADR/invariant | `specs/decisions/NNN-slug.md` |
 
 ### Step 2 — Read META.md
 
@@ -193,8 +193,29 @@ What was evaluated and why it was rejected.
 ```
 
 **ADR-specific rules:**
-- Determine the next sequential number by checking existing files in `specs/decisions/`
+
+**The ADR bar test** (the same criteria as vibespec-init Step 8 and the WORKFLOW.md template):
+
+Create an ADR only if the decision meets BOTH:
+1. **Constrains work beyond the immediate change** — cross-domain, cross-cutting, or hard to reverse
+2. **Had real alternatives considered and rejected** — a genuine choice existed, and the rejected options are worth remembering
+
+OR meets this one alone:
+
+3. **Contradicts or supersedes** an existing ADR or a documented invariant.
+
+**Do NOT create an ADR for:**
+- An implementation detail → record it as an invariant in the domain spec
+- A local, cheaply reversible choice → record it in the domain spec
+- Restating an existing spec or invariant → do nothing
+- A decision with no genuine alternatives → record it in the domain spec
+
+**`Alternatives Considered` is the bar.** If that section cannot be filled honestly, it is not an ADR — the decision belongs in a domain spec.
+
+- Determine the next sequential number by scanning ALL files in `specs/decisions/` — including superseded ADRs. The scan is number-keyed: parse the leading `NNN` from each filename (`NNN-slug.md`) and ignore the slug; next number = highest parsed NNN + 1
 - Numbers are NEVER reused (even for superseded ADRs)
+- Under parallel branches, a freshly allocated number is provisional until that branch merges — a sibling branch may have allocated the same number in the meantime
+- If a duplicate number reaches the tree at merge time, the second-landed ADR takes the next free number. When renumbering, update ALL of: the filename, the `# ADR-NNN: [Title]` heading, `Superseded by [NNN](./NNN-slug.md)` links in other ADRs, INDEX.md entries, and any cross-references to this ADR in other specs
 - Once `Status: Accepted`, the ADR is immutable
 - To change a decision: create a NEW ADR, then update the old one's Status to `Superseded by [NNN](./NNN-slug.md)` (this is the only allowed edit to an accepted ADR)
 
@@ -224,6 +245,7 @@ Before declaring done, verify:
 - [ ] Invariants are stated affirmatively ("X always does Y", NOT "X never does Z")
 - [ ] INDEX.md has been updated to include the new file
 - [ ] Naming follows conventions (kebab-case, correct directory)
+- [ ] ADR only: no other file in `specs/decisions/` carries the same NNN number
 - [ ] No filler prose — every sentence carries information
 - [ ] ASCII diagrams used for flows (not Mermaid or other renderers)
 

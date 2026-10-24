@@ -144,10 +144,10 @@ For each identified boundary between layers/modules:
 
 Create `decisions/_template.md` from `assets/adr-template.md`.
 
-Generate ADRs for architectural decisions that are:
-- Non-obvious from the code alone
-- Constraints that future developers/agents must respect
-- Technology choices with rejected alternatives
+Generate ADRs only for decisions that pass the ADR bar — the same test `vibespec-create` applies:
+- **Constrains work beyond the immediate change** (cross-domain, cross-cutting, or hard to reverse) **AND had real alternatives considered and rejected**
+- If `Alternatives Considered` cannot be filled honestly, it is not an ADR — record the decision in the relevant domain or architecture spec instead
+- At bootstrap the supersedes branch of the bar cannot apply — the spec tree starts empty
 
 Common candidates:
 - Module structure choice (monorepo vs multi-repo, single module vs workspace)
