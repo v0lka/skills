@@ -39,17 +39,28 @@ for a single research project is:
     └── report.md                     # Final report (created at synthesis only)
 ```
 
-`{research-root}` is a directory the user specifies. It may already contain
-other research projects. If `index.md` exists, this is an existing root; if
-not, create it.
+`{research-root}` is the project's research root. If the host project
+documents a research-root convention (e.g. in AGENTS.md or comparable
+instructions), follow it; otherwise the root is `research/` under the
+workspace root (`<workspace>/research`). It may already contain other
+research projects. If `index.md` exists, this is an existing root; if not,
+create it.
 
 ## Procedure
 
 ### Step 1 — Determine the research root
 
-Ask the user which directory to use as the research root. If the directory
-already contains `index.md`, treat it as an existing research root. Otherwise,
-create the directory and seed `index.md` with an empty research index heading.
+Determine the research root from the host convention first: if the host
+project documents where its research root lives, use exactly that location
+and never create a root anywhere else — host tooling that resolves the root
+by convention cannot see a project seeded elsewhere. With no documented
+convention, use `<workspace>/research` and do not ask the user which
+directory to use. If the root already contains `index.md`, treat it as an
+existing research root. Otherwise, create the directory and seed `index.md`
+with an empty research index heading. If a legacy `.research` directory
+exists beside the workspace instead, surface it to the user and follow the
+host's documented migration procedure; do not write into the legacy
+location.
 
 ### Step 2 — Assign a research identifier
 

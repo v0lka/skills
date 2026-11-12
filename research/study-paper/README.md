@@ -27,19 +27,22 @@ Every specific claim is attributed to the paper (section / figure / equation), a
 
 ## How it works
 
-The skill follows a seven-step workflow, entered at whichever depth the request implies:
+The skill infers the intended depth, confirms it in one line, and enters one of six modes:
 
 ```
-1. Acquire & identify  →  resolve input (PDF / arXiv / DOI) to a canonical source
-2. Skim / orient       →  gist + structured map of the contribution
-3. Understand method   →  reconstruct the pipeline, symbols, and assumptions
-4. Critically appraise →  separate claim from evidence; check validity
-5. Reproduce/implement →  turn the method into an implementable spec
-6. Compare             →  comparison table across papers
-7. Teach / explain     →  adapt depth to the audience
+Skim      → map + contributions + TL;DR + ≤3 red flags + reading decision
+Deep      → complete read + a claim→evidence check on every load-bearing claim
+Survey    → the paper's place among a set + a cross-paper comparison
+Review    → full appraisal + statistics / reproducibility audit
+Implement → method decomposition + equations + hyperparameters + data + gotchas
+Teach     → multi-level explanation + glossary + Socratic questions + flashcards
 ```
 
-Output conventions: lead with the answer at the requested depth, cite the paper precisely for specific claims, and mark clearly what is stated vs. inferred vs. unknown.
+Every mode passes through the same mandatory critical layer: a claim→evidence
+check on the load-bearing claims, at most three ranked red flags, and explicit
+uncertainty flags.
+
+Output conventions: lead with the answer at the requested depth, cite the paper precisely for specific claims (section / figure / equation anchors), and mark clearly what is stated vs. inferred vs. unknown.
 
 Guardrails: never fabricate results, numbers, citations, or methods; never overstate evidence; if a source cannot be retrieved or parsed, say so plainly.
 
@@ -47,7 +50,9 @@ Guardrails: never fabricate results, numbers, citations, or methods; never overs
 
 | File        | Purpose                                                                       |
 | ----------- | ----------------------------------------------------------------------------- |
-| `SKILL.md`  | Skill definition: role, triggers, the seven-step workflow, and guardrails     |
+| `SKILL.md`  | Skill definition: role, the six reading modes, the critical layer, and guardrails |
+| `scripts/fetch_paper.py` | *optional*: resolve an identifier, DOI, or URL to metadata and an open-access PDF |
+| `scripts/literature.py`  | *optional*: fetch predecessors, citing works, and contradictions |
 
 ## Compatibility
 
@@ -57,8 +62,8 @@ Optional capabilities add environment requirements:
 
 | Capability                         | Requirement                                                        |
 | ---------------------------------- | ----------------------------------------------------------------- |
-| PDF text extraction (scripts)      | Python 3 and [PyMuPDF](https://pypi.org/project/PyMuPDF/) (`pip install pymupdf`) |
-| Literature lookup by arXiv / DOI   | Network access                                                    |
+| PDF → Markdown conversion          | a host-managed document converter on `PATH` (e.g. `markitdown`) — optional; the workflow runs without it |
+| Literature lookup by arXiv / DOI   | Python 3 (stdlib-only scripts) and network access                 |
 
 The skill is agent-agnostic and describes **what** to do rather than naming specific operations to call.
 

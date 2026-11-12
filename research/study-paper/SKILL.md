@@ -2,8 +2,9 @@
 name: study-paper
 description: >-
   Study, understand, and critically appraise research papers — skim for triage, read deeply, reproduce, compare, and teach them. Accepts a paper as a PDF, an arXiv ID or URL, a DOI, a citation, or a pasted abstract, and produces accurate, structured understanding — motivation, problem, method, experiments, results, and limitations — explicitly separating what a paper claims from what it demonstrates. Use when the user asks to understand a paper, read or summarize a paper or PDF, skim a preprint for triage, explain or unpack an arXiv paper, appraise a paper's methodology and evidence, reproduce or re-implement a paper's method, compare several papers, extract a paper's key ideas, or teach and explain a paper at a chosen depth. Trigger keywords: paper, PDF, arXiv, DOI, preprint, literature, "what does this paper do", "walk me through this paper", "is this paper any good", "reproduce this paper", "compare these papers".
-license: MIT
-compatibility: Core workflow is dependency-free (any agent that can read, search, and fetch). Optional PDF text-extraction scripts require Python 3 and PyMuPDF (pip install pymupdf). Optional literature lookup by arXiv ID / DOI requires network access.
+metadata:
+  domain: research
+  methodology: critical-reading
 ---
 
 # Study Paper
@@ -34,10 +35,17 @@ Do not silently escalate a "summarize this" into a full review, and do not answe
 
 | If the user wants to… | Mode | Primary output |
 | --- | --- | --- |
-| Decide whether to read at all | **Skim** | map + contributions + TL;DR + ≤3 red flags + verdict |
+| Decide whether to read at all | **Skim** | map + contributions + TL;DR + ≤3 red flags + reading decision |
+| Read the paper in full and verify its claims | **Deep** | complete read + a claim→evidence check on every load-bearing claim |
+| Read the paper as one of a broader set | **Survey** | the paper's place among a set + a cross-paper comparison |
 | Understand whether it is sound | **Review** | full appraisal + statistics / reproducibility audit |
 | Rebuild the method | **Implement** | method decomposition + equations + hyperparameters + data + gotchas |
 | Learn the ideas | **Teach** | multi-level explanation + glossary + Socratic questions + flashcards |
+
+**Skim**, **Deep**, and **Survey** name the engagement depths — how much of the
+paper (and how many papers) you read; **Review**, **Implement**, and **Teach** are
+the skill's own working modes. They sit on one shallow → deep axis, and the card's
+`mode` field records whichever token names the depth you actually reached.
 
 Regulate depth continuously:
 
@@ -51,7 +59,7 @@ Regulate depth continuously:
 - **Ask when ambiguous.** If the request could reasonably sit in two modes, ask
   which depth is wanted before writing a long answer.
 
-## The mandatory critical layer (applies to ALL four modes)
+## The mandatory critical layer (applies to ALL modes)
 
 Every mode ends by passing through the same critical layer. Do this even when the
 user only asked to "explain" or "summarize" — a reader who cannot see the
@@ -68,7 +76,7 @@ weaknesses has not been served.
    the available source, or dependent on assumptions — explicitly, rather than
    quietly filling the gap.
 
-The layer is **required in all four modes**; only its length varies.
+The layer is **required in every mode**; only its length varies.
 
 ## Source-anchor discipline
 
@@ -101,6 +109,12 @@ If you cannot tell which voice a sentence is in, rewrite it until you can.
 
 ## Modes
 
+The four workflows below are the skill's own working modes. The card's `mode`
+field also accepts the engagement depths **Deep** and **Survey** (see "Choose the
+mode"), so record whichever of the six tokens best names the depth you reached —
+`deep` for a full read whose claims you verified, `survey` for a read as one of a
+set.
+
 ### Mode 1 — Skim (triage)
 
 Goal: enough to decide whether a full read is worth it. Keep it to roughly one
@@ -115,8 +129,8 @@ screen.
 4. **Write the TL;DR** — 2–4 sentences a busy reader could act on.
 5. **Apply the critical layer** — claim→evidence on the headline claim, ≤3 red
    flags, uncertainty flags (condensed).
-6. **Give the verdict** — *read in full* / *read selectively* / *skip*, with a
-   one-line reason, and if selective, exactly what to read.
+6. **Give the reading decision** — *read in full* / *read selectively* / *skip*,
+   with a one-line reason, and if selective, exactly what to read.
 
 ### Mode 2 — Review (full appraisal)
 
@@ -181,12 +195,144 @@ Goal: the reader genuinely understands the ideas — and their limits.
 4. **Work an example** — a concrete walkthrough or toy instance of the core idea.
 5. **Ask Socratic questions** — probing questions *with* answers, aimed at likely
    misconceptions.
-6. **Provide flashcards** — question/answer pairs for spaced repetition.
+6. **Provide flashcards** — write question/answer pairs for spaced repetition to
+   `<research-root>/papers/<slug>/flashcards.md`, using the
+   [assets/flashcards.md](assets/flashcards.md) shape.
 7. **Apply the critical layer** — teach what the paper claims versus what it
    shows; weave the ≤3 red flags and uncertainty flags into the explanation
    rather than bolting them on.
 8. **Close** — an "if you remember one thing" line, and pointers for what to
    read or try next.
+
+## Working inside a host workspace
+
+When the host workspace manages the paper library, follow these conventions on
+top of the workflow above. Without a managing host, apply the same layout under
+the research root established with the research-init workflow.
+
+### Where artifacts live
+
+Write the reading artifacts under the active RESEARCH root, in a per-paper slug
+directory. Every paper carries three core files; Teach mode adds a flashcards
+deck, and a reading may also drop the optional per-paper artifacts below:
+
+```
+<research-root>/papers/<slug>/
+├── paper.md        # identity card — YAML front-matter (the paper's metadata)
+├── note.md         # evidence note — claim→evidence, red flags, uncertainty
+├── appraisal.md    # appraisal sheet — verdict + confidence
+├── flashcards.md   # flashcard deck (Teach only) — card table + append-only review log
+├── source.md       # (optional) the extracted source text (PDF → Markdown)
+├── literature.md   # (optional) the literature-context note (predecessors / citing / contradictions)
+├── comparison.md   # (optional) a per-paper comparison note (comparison-matrix.md is also accepted)
+├── paper.html      # (optional, app-managed) the fetched original HTML rendition — READ-ONLY
+└── assets/         # (optional, app-managed) images for paper.html — READ-ONLY
+```
+
+Multi-paper comparison artifacts live in a sibling of the per-paper tree, one
+Markdown file per comparison set:
+
+```
+<research-root>/comparisons/<slug>.md   # one comparison matrix per set
+```
+
+- `<research-root>` is the project's research root: the host's documented
+  research-root convention if it defines one, otherwise
+  `<workspace>/research`. The library is always read from
+  `<research-root>/papers/<slug>/` (and comparisons from
+  `<research-root>/comparisons/<slug>.md`); a host that resolves the root by
+  convention sees no other location, so never write a bare `papers/` beside
+  the workspace root.
+- `<slug>` is the paper's directory name: a stable kebab-case identifier. Prefer
+  `<first-author>-<year>-<short-title>` (e.g. `vaswani-2017-attention`); when an
+  identifier is more natural, `arxiv-1706.03762` is fine. Choose the slug once
+  and reuse it whenever you return to the same paper.
+- `source.md`, `literature.md`, and `comparison.md` are OPTIONAL per-paper
+  artifacts: write them when the reading produces them (an extracted source, a
+  literature-context note, a single-paper comparison) and omit them otherwise —
+  the app renders each section's empty state when the file is absent.
+- `paper.html` and `assets/` are APP-MANAGED: the app's "Load HTML original"
+  action fetches the original HTML rendition and rewrites both. Treat them as
+  read-only — never rewrite, move, or delete them, and never add files under
+  `assets/`. You may read `paper.html` as the original rendition (useful when
+  `source.md` is missing or insufficient), but refreshing it is the app's job,
+  not yours.
+
+These files are the host's paper-library format and are read back verbatim by
+the app, so keep their shapes exactly as follows.
+
+### `paper.md` — the identity card
+
+`paper.md` is a single YAML front-matter block. Populate the fields you know and
+omit the rest (every field is optional):
+
+```yaml
+---
+id: P-001                  # library-local id (optional)
+slug: vaswani-2017-attention
+title: <paper title>
+authors: [<author>, ...]
+year: <YYYY>
+venue: <venue or "preprint">
+identifiers:
+  - {scheme: arxiv, value: "1706.03762"}
+  - {scheme: doi,   value: "10.1145/..."}
+mode: skim | deep | survey | review | implement | teach
+reading: full | selective | skip
+verdict: accepted | rejected | uncertain
+confidence: low | medium | high
+research_ids: [H-001]      # research hypotheses this paper informs (optional)
+anchors:                   # notable locations later evidence points back to
+  - {label: sec3, ref: "§3"}
+---
+```
+
+### `note.md` — the evidence note
+
+`note.md` holds the evidence, built from
+[assets/note-template.md](assets/note-template.md), as three Markdown tables:
+
+- **Claims** — `Claim | Evidence | Location | Stance` (one row per load-bearing
+  claim; `Stance` is `supports` / `contradicts` / …).
+- **Red Flags** — `Flag | Detail | Severity` (at most three, ranked by severity).
+- **Uncertainty** — `Item | Detail`.
+
+The `Location` column carries the source anchor for each claim; keep the
+anchor/voice discipline above when filling these tables.
+
+### `appraisal.md` — the appraisal sheet
+
+`appraisal.md` is the critical-review write-up, built from
+[assets/appraisal-template.md](assets/appraisal-template.md). It records the
+`Verdict` and `Confidence` (kept in sync with `paper.md`) plus the supporting
+narrative.
+
+### Append, never rewrite
+
+Deepening a reading is **append-only**. When the user escalates a paper's depth —
+a skim becomes a review, a review becomes an implement or teach pass — APPEND new
+rows to `note.md`'s tables and new sections to `appraisal.md`, and update
+`paper.md`'s `mode` / `reading` / `confidence` in place (`verdict` stays the
+soundness judgement, kept in sync with the appraisal sheet). Never rewrite or
+delete
+content already written: earlier findings, red flags, and uncertainty flags are
+part of the evidence trail. If a new pass contradicts an earlier assessment, add
+a new section (and a new claim row) that says so instead of editing the old one.
+
+### Tools
+
+- **PDF → Markdown**: prefer a host-managed document converter on `PATH`
+  (e.g. `markitdown`), writing the extraction to the paper's `source.md`, e.g.
+  `markitdown paper.pdf > <research-root>/papers/<slug>/source.md`, then apply
+  the fidelity guidance in
+  [references/extraction-and-fidelity.md](references/extraction-and-fidelity.md).
+  No converter script ships with this skill — a host-managed converter, when
+  available, is the supported path.
+- **Optional lookups**: run `scripts/fetch_paper.py` and `scripts/literature.py`
+  with Python 3, e.g.
+  `python3 <skill-dir>/scripts/fetch_paper.py arXiv:1706.03762`. Both are
+  stdlib-only and need no extra installs. They are convenience only — the
+  workflow runs without them.
 
 ## Guardrails
 
@@ -222,16 +368,16 @@ relative to this file:
 | [references/stats-and-benchmarks.md](references/stats-and-benchmarks.md) | statistics and benchmark red-flag catalog | reviewing or reproducing numbers |
 | [references/extraction-and-fidelity.md](references/extraction-and-fidelity.md) | structured extraction and fidelity-warning guidance | ingesting any source |
 | [references/literature-context.md](references/literature-context.md) | finding predecessors, citing works, and contradictions | situating a paper in the literature |
-| [assets/note-template.md](assets/note-template.md) | structured reading note with a claim→evidence matrix | recording a reading |
-| [assets/appraisal-template.md](assets/appraisal-template.md) | critical review write-up | any Review |
+| [assets/note-template.md](assets/note-template.md) | the `note.md` evidence note — claim→evidence, red-flags, and uncertainty tables | recording a reading |
+| [assets/appraisal-template.md](assets/appraisal-template.md) | the `appraisal.md` critical-review sheet (verdict + confidence) | any Review |
 | [assets/comparison-matrix.md](assets/comparison-matrix.md) | multi-paper comparison matrix | comparing papers |
 | [assets/flashcards.md](assets/flashcards.md) | question/answer + spaced-repetition format | any Teach |
 | [assets/explainer-outline.md](assets/explainer-outline.md) | multi-level explanation scaffold | any Teach |
 | [scripts/fetch_paper.py](scripts/fetch_paper.py) | *optional*: resolve an identifier, DOI, or URL to metadata and an open-access PDF | fast ingestion (optional) |
-| [scripts/to_markdown.py](scripts/to_markdown.py) | *optional*: convert a PDF to structured markdown with fidelity notes | fast ingestion (optional) |
 | [scripts/literature.py](scripts/literature.py) | *optional*: fetch predecessors, citing works, and contradictions | literature context (optional) |
 
-The overview of this package lives in `README.md` at the package root.
-
-The scripts are convenience only — the workflow runs without them, using the
-reading, searching, and fetching capabilities available to you.
+PDF→Markdown conversion uses a host-managed document converter when one is
+available rather than a bundled converter script (see "Working inside a host
+workspace"). The scripts above are convenience only — the workflow runs
+without them, using the reading, searching, and fetching capabilities
+available to you.

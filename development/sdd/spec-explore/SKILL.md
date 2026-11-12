@@ -5,8 +5,8 @@ description: Spec-aware Explore → Plan → Implement for projects that maintai
 
 # Spec-aware Explore → Plan → Implement
 
-`spec-explore` is the spec-aware counterpart of the standalone `explore`
-skill. It is a three-mode workflow — thinking partner, then structured planning,
+`spec-explore` is the spec-aware counterpart of a plain code-exploration session.
+It is a three-mode workflow — thinking partner, then structured planning,
 then implementation — with one difference that shapes every mode: **the
 project's specification system (`specs/`) is the entry point, not the codebase.**
 
@@ -289,8 +289,7 @@ Each task runs the project's ordinary loop around the actual change:
 ```
    ┌────────────────┐
    │ consult specs  │  read the specs named in the task's Spec footprint
-   │ (spec-     │  plus their domain README; keep invariants visible
-   │  consult)      │
+   │ (spec-consult) │  plus their domain README; keep invariants visible
    └───────┬────────┘
            ▼
    ┌────────────────┐
@@ -299,8 +298,8 @@ Each task runs the project's ordinary loop around the actual change:
            ▼
    ┌────────────────┐
    │   sync specs   │  spec-update for changed specs;
-   │ (spec-     │  spec-create for new ones (or a new ADR)
-   │  update/create)│
+   │ (spec-update/  │  spec-create for new ones (or a new ADR)
+   │  spec-create)  │
    └────────────────┘
 ```
 
@@ -430,7 +429,7 @@ specs did not drift.
 
 # Edge Cases
 
-- **No `specs/` directory** — tell the user, then behave as plain `explore`. All
+- **No `specs/` directory** — tell the user, then behave as plain exploration. All
   spec-aware steps become no-ops; do not invent a spec system.
 - **Spec drift noticed mid-work** — note the discrepancy and mention that
   `spec-check` can resolve it. Do NOT silently fix specs during an explore or

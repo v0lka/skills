@@ -3,10 +3,11 @@ name: spec-init
 description: >-
   Initialize a specification system for a project from scratch. Analyzes the
   codebase to identify architectural layers, domains, boundaries, and key
-  decisions, then generates the initial set of specs (META.md, WORKFLOW.md,
-  INDEX.md, domain specs, contracts, architecture docs, ADR template). Use when
-  bootstrapping specs for a new project, setting up documentation governance, or
-  creating a spec system for an existing codebase that has none.
+  decisions, then generates the initial set of specs (META.md, INDEX.md, domain
+  specs, contracts, architecture docs, ADR template; a WORKFLOW.md only when the
+  host has no documented spec-system entry point). Use when bootstrapping specs
+  for a new project, setting up documentation governance, or creating a spec
+  system for an existing codebase that has none.
 ---
 
 # Spec System Initialization
@@ -74,7 +75,8 @@ Based on analysis, design the directory structure:
 specs/
 ├── META.md
 ├── INDEX.md
-├── WORKFLOW.md
+├── WORKFLOW.md   (conditional — see Step 10; skipped when the host already
+│                  documents its spec-system usage)
 │
 ├── architecture/
 │   └── (identified system-level concerns)
@@ -162,9 +164,11 @@ Create the navigation file with:
 2. **Dependency graph**: ASCII diagram of layer relationships
 3. **Directory listing**: all spec files organized by section
 
-### Step 10 — Generate WORKFLOW.md
+### Step 10 — Generate WORKFLOW.md (conditional)
 
-Use the template from `assets/workflow-template.md` as the base. Customize:
+If the host already documents its spec-system usage — an AGENTS.md pointer, a META.md, or a comparable entry point describing how agents should work with specs — do NOT create WORKFLOW.md: the host's own documentation is the "how to use the spec system" surface, and a second one would drift from it. Skip this step and continue with Step 11.
+
+Otherwise, use the template from `assets/workflow-template.md` as the base. Customize:
 - Section 6 "Workflow for Typical Tasks" — add project-specific task workflows
 - Examples throughout should reference this project's actual domains and components
 
@@ -180,6 +184,8 @@ Detailed system specs live in `specs/`. Before making structural changes, read t
 - Start with `specs/INDEX.md` to find the right document for your task.
 - `specs/META.md` defines spec formats and update rules.
 ```
+
+The AGENTS.md pointer is the "how to use the spec system" entry point — do not create any other workflow/usage document; INDEX.md and META.md carry the navigation and the rules.
 
 ### Step 12 — Final validation
 
@@ -199,7 +205,7 @@ Present a summary to the user:
 SPEC INIT COMPLETE
 ═══════════════════════════════════
 Generated:
-  META.md, WORKFLOW.md, INDEX.md
+  META.md, INDEX.md (+ WORKFLOW.md if generated)
   Architecture specs: N
   Domain specs: N (M READMEs + K detail files)
   Contract specs: N

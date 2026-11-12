@@ -2,7 +2,7 @@
 
 > **Usage.** One note per paper. Record a reading in any mode — fill only the
 > sections that mode needs, leave the rest blank.
-> - **Skim** → §1–3, §7, §8, §9 (keep it to about one screen).
+> - **Skim** → §1–4, §7, §8, §9 (keep it to about one screen).
 > - **Review** → all sections; the §5 matrix and §7 critical layer carry the weight.
 > - **Implement** → §1, §4, §5, §6, §7, plus the reproduction checklist in §11.
 > - **Teach** → §1, §3, §6, §7, §8; hand the terms in §6 to `flashcards.md`.
@@ -84,6 +84,22 @@ leaving it blank.
   available source, or assumption-dependent):
   - …
 
+Record the same red flags and open questions in the two tables below; the
+`paperGaps` / hypothesis-from-gaps path reads them structurally (the parser
+matches these headers).
+
+### Red flags
+
+| Flag | Detail | Severity |
+| --- | --- | --- |
+| | | |
+
+### Uncertainty
+
+| Item | Detail |
+| --- | --- |
+| | |
+
 ## 8. TL;DR (2–4 sentences a busy reader could act on)
 
 …
@@ -92,9 +108,10 @@ leaving it blank.
 
 | Field | Value |
 | --- | --- |
-| Read in full / read selectively / skip | |
+| Reading (read in full / read selectively / skip) | |
 | One-line reason | |
 | If selective, read exactly | |
+| Verdict (accepted / rejected / uncertain) | |
 | Confidence in this verdict (low / medium / high) | |
 
 ## 10. Open questions & follow-ups
