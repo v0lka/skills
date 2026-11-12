@@ -11,25 +11,25 @@ The skills are split into **lifecycle** (invoked at distinct stages) and **conti
 ```
   Lifecycle skills                    Continuous skills
   ────────────────                    ─────────────────
-  vibespec-init                       vibespec-consult
-  vibespec-explore                    vibespec-update
-  vibespec-create                     vibespec-check
+  spec-init                       spec-consult
+  spec-explore                    spec-update
+  spec-create                     spec-check
 ```
 
-`vibespec-explore` is the on-ramp for work whose requirements are not yet clear; the other skills assume the change is already known.
+`spec-explore` is the on-ramp for work whose requirements are not yet clear; the other skills assume the change is already known.
 
 | Skill              | Purpose                                                                                                                                                                                                          |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vibespec-init`    | Bootstrap a complete spec system for a project: analyze the codebase, identify layers/domains/boundaries, and generate META.md, WORKFLOW.md, INDEX.md, domain specs, contracts, architecture docs, ADR template. |
-| `vibespec-explore` | Spec-aware thinking partner for work whose requirements are unclear: grounds exploration in the project's spec system, turns crystallized ideas into a roadmap (What / How / Where / Spec footprint / Acceptance criteria) for user approval, then implements it while syncing specs via `vibespec-update` / `vibespec-create`. |
-| `vibespec-create`  | Create a single new spec document (domain, contract, architecture, or ADR) following templates and naming conventions. Ensures correct format, placement, cross-references, and INDEX.md registration.           |
-| `vibespec-update`  | Update existing specs after code changes that alter documented behavior, interfaces, or invariants. Preserves format, maintains cross-reference integrity, and respects ADR immutability.                        |
-| `vibespec-check`   | Detect discrepancies between specs and actual code. Categorizes drift (path missing, type mismatch, behavior drift, etc.) and interactively asks the user how to resolve each finding.                           |
-| `vibespec-consult` | Proactively load relevant specs before making structural changes. Extracts invariants, anti-patterns, and breaking-change checklists so the agent respects constraints during implementation.                    |
+| `spec-init`    | Bootstrap a complete spec system for a project: analyze the codebase, identify layers/domains/boundaries, and generate META.md, WORKFLOW.md, INDEX.md, domain specs, contracts, architecture docs, ADR template. |
+| `spec-explore` | Spec-aware thinking partner for work whose requirements are unclear: grounds exploration in the project's spec system, turns crystallized ideas into a roadmap (What / How / Where / Spec footprint / Acceptance criteria) for user approval, then implements it while syncing specs via `spec-update` / `spec-create`. |
+| `spec-create`  | Create a single new spec document (domain, contract, architecture, or ADR) following templates and naming conventions. Ensures correct format, placement, cross-references, and INDEX.md registration.           |
+| `spec-update`  | Update existing specs after code changes that alter documented behavior, interfaces, or invariants. Preserves format, maintains cross-reference integrity, and respects ADR immutability.                        |
+| `spec-check`   | Detect discrepancies between specs and actual code. Categorizes drift (path missing, type mismatch, behavior drift, etc.) and interactively asks the user how to resolve each finding.                           |
+| `spec-consult` | Proactively load relevant specs before making structural changes. Extracts invariants, anti-patterns, and breaking-change checklists so the agent respects constraints during implementation.                    |
 
 ## Spec system structure
 
-The `vibespec-init` skill creates and the other skills maintain a standard directory tree:
+The `spec-init` skill creates and the other skills maintain a standard directory tree:
 
 ```
 specs/
@@ -61,7 +61,7 @@ The spec system lives alongside the codebase. META.md is the foundational docume
 ### Phase 1 — Initialization
 
 ```
-vibespec-init
+spec-init
 ```
 
 Run once on an existing codebase that has no spec system. The agent:
@@ -75,34 +75,34 @@ Run once on an existing codebase that has no spec system. The agent:
 ### Phase 2 — Exploring work whose requirements are unclear
 
 ```
-vibespec-explore  ->  [approved roadmap]  ->  vibespec-consult -> implement -> vibespec-update
+spec-explore  ->  [approved roadmap]  ->  spec-consult -> implement -> spec-update
 ```
 
-Use `vibespec-explore` at the start of any task whose requirements are not yet clear. It grounds exploration in the spec system and produces an approved roadmap whose tasks each carry a **Spec footprint** — the spec work they own. The ordinary daily loop then carries the roadmap out.
+Use `spec-explore` at the start of any task whose requirements are not yet clear. It grounds exploration in the spec system and produces an approved roadmap whose tasks each carry a **Spec footprint** — the spec work they own. The ordinary daily loop then carries the roadmap out.
 
 ### Phase 3 — Daily development (the spec-aware loop)
 
 ```
-vibespec-consult  ->  [implement]  ->  vibespec-update
+spec-consult  ->  [implement]  ->  spec-update
       ^                                       |
       └───────────────────────────────────────┘
 ```
 
 This is the core loop for spec-aware development:
 
-1. **Consult** (`vibespec-consult`) — before making structural changes, load relevant specs via INDEX.md. Extract invariants, extension points, anti-patterns, and breaking-change checklists.
+1. **Consult** (`spec-consult`) — before making structural changes, load relevant specs via INDEX.md. Extract invariants, extension points, anti-patterns, and breaking-change checklists.
 2. **Implement** — proceed with the code change, respecting extracted constraints.
-3. **Update** (`vibespec-update`) — after implementation, update any specs affected by the change. Maintain format, cross-references, and ADR immutability.
+3. **Update** (`spec-update`) — after implementation, update any specs affected by the change. Maintain format, cross-references, and ADR immutability.
 
 Two skills can be invoked **at any point** during development:
 
-- `vibespec-create` — when you need a new spec document (new domain, new contract, new ADR).
-- `vibespec-check` — when you suspect drift, after major refactoring, or as periodic maintenance.
+- `spec-create` — when you need a new spec document (new domain, new contract, new ADR).
+- `spec-check` — when you suspect drift, after major refactoring, or as periodic maintenance.
 
 ### Phase 4 — Drift detection
 
 ```
-vibespec-check  ->  [user decisions]  ->  vibespec-update / code fixes
+spec-check  ->  [user decisions]  ->  spec-update / code fixes
 ```
 
 When specs may have drifted from code:
@@ -141,29 +141,29 @@ Each skill owns specific files and respects boundaries:
 
 | Skill              | Creates                          | Updates                                             |
 | ------------------ | -------------------------------- | --------------------------------------------------- |
-| `vibespec-init`    | Entire `specs/` tree (all files) | `AGENTS.md` (adds pointer to specs)                 |
-| `vibespec-explore` | — (presents a roadmap in-conversation) | — (read-only on `specs/`; delegates edits to `vibespec-update` / `vibespec-create`) |
-| `vibespec-create`  | One new spec file of any type    | `INDEX.md` (adds entry)                             |
-| `vibespec-update`  | —                                | Any existing spec; `INDEX.md` if files renamed      |
-| `vibespec-check`   | —                                | — (read-only; delegates fixes to `vibespec-update`) |
-| `vibespec-consult` | —                                | — (read-only; may trigger `vibespec-update` after)  |
+| `spec-init`    | Entire `specs/` tree (all files) | `AGENTS.md` (adds pointer to specs)                 |
+| `spec-explore` | — (presents a roadmap in-conversation) | — (read-only on `specs/`; delegates edits to `spec-update` / `spec-create`) |
+| `spec-create`  | One new spec file of any type    | `INDEX.md` (adds entry)                             |
+| `spec-update`  | —                                | Any existing spec; `INDEX.md` if files renamed      |
+| `spec-check`   | —                                | — (read-only; delegates fixes to `spec-update`) |
+| `spec-consult` | —                                | — (read-only; may trigger `spec-update` after)  |
 
 ## Skill interconnections
 
 ```
-vibespec-init (once)
+spec-init (once)
       │
       ▼
-vibespec-explore ──► vibespec-consult ──► [implementation] ──► vibespec-update ──► vibespec-check
+spec-explore ──► spec-consult ──► [implementation] ──► spec-update ──► spec-check
       ▲                                                                            │
       │                                                                            │
       └────────────────────────────────────────────────────────────────────────────┘
                               (drift or new work re-enters the loop)
 
-vibespec-create ◄── (new spec or ADR when UNDOCUMENTED or a decision passes the ADR bar)
+spec-create ◄── (new spec or ADR when UNDOCUMENTED or a decision passes the ADR bar)
       │
       ▼
-vibespec-update (INDEX.md registration)
+spec-update (INDEX.md registration)
 ```
 
 The typical invocation patterns:

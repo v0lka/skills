@@ -1,11 +1,11 @@
 ---
-name: vibespec-explore
-description: Spec-aware Explore → Plan → Implement for projects that use the vibespec specification system. A thinking partner for exploring ideas and clarifying requirements that grounds investigation in the project's specs/ before reaching for code, produces a roadmap (What / How / Where / Spec footprint / Acceptance criteria) for user approval, then implements it while keeping specs synchronized via the spec lifecycle skills. Use when requirements are unclear, when discussing architecture and design decisions, or before a structural change in a spec-governed project. Falls back to plain code exploration when no specs/ directory exists.
+name: spec-explore
+description: Spec-aware Explore → Plan → Implement for projects that maintain a specification system under specs/. A thinking partner for exploring ideas and clarifying requirements that grounds investigation in the project's specs/ before reaching for code, produces a roadmap (What / How / Where / Spec footprint / Acceptance criteria) for user approval, then implements it while keeping specs synchronized via the spec lifecycle skills. Use when requirements are unclear, when discussing architecture and design decisions, or before a structural change in a spec-governed project. Falls back to plain code exploration when no specs/ directory exists.
 ---
 
 # Spec-aware Explore → Plan → Implement
 
-`vibespec-explore` is the spec-aware counterpart of the standalone `explore`
+`spec-explore` is the spec-aware counterpart of the standalone `explore`
 skill. It is a three-mode workflow — thinking partner, then structured planning,
 then implementation — with one difference that shapes every mode: **the
 project's specification system (`specs/`) is the entry point, not the codebase.**
@@ -35,17 +35,17 @@ mode-appropriate rules below. No external mode-switching function is involved.
 ## Where this skill sits in the spec loop
 
 ```
-vibespec-explore ──► vibespec-consult ──► [implement] ──► vibespec-update ──► vibespec-check
+spec-explore ──► spec-consult ──► [implement] ──► spec-update ──► spec-check
       │  approved roadmap        ▲                                │
       │                          └────────────────────────────────┘
       ▼
-vibespec-create          (new spec or ADR when the roadmap needs one)
+spec-create          (new spec or ADR when the roadmap needs one)
 ```
 
-`vibespec-explore` is the on-ramp for work whose requirements are not yet clear.
+`spec-explore` is the on-ramp for work whose requirements are not yet clear.
 Once a roadmap is approved, the ordinary spec-aware loop
 (`consult → implement → update`) carries it out. This skill **reads** specs and
-**delegates** every spec edit to `vibespec-update` or `vibespec-create` — it
+**delegates** every spec edit to `spec-update` or `spec-create` — it
 never edits `specs/` itself.
 
 ---
@@ -56,7 +56,7 @@ Ground in **specs first, code second**:
 
 1. **Locate the spec system** — `specs/INDEX.md` (task → spec navigation) and
    `specs/META.md` (formats and rules). This is exactly the procedure of the
-   `vibespec-consult` skill.
+   `spec-consult` skill.
 2. **Read specs in dependency order** — domain README → domain detail →
    contract → architecture. Treat them as the map of intended behavior,
    interfaces, and invariants.
@@ -128,8 +128,8 @@ spec covers, mark it explicitly:
 UNDOCUMENTED: <area> — no spec coverage
 ```
 
-This is the same category `vibespec-check` reports. Capture such areas as
-candidates for `vibespec-create` and carry them into the roadmap's Spec
+This is the same category `spec-check` reports. Capture such areas as
+candidates for `spec-create` and carry them into the roadmap's Spec
 footprint. A documented claim that turns out to be *wrong* is a different finding
 — see *Edge cases*.
 
@@ -179,7 +179,7 @@ from scratch.
 
 ## Consult specs before finalizing
 
-Before presenting the roadmap, run the `vibespec-consult` procedure for the areas
+Before presenting the roadmap, run the `spec-consult` procedure for the areas
 the plan will touch. Fold what you extract into the roadmap:
 
 - **Invariants** — rules that must always hold (they become plan constraints)
@@ -208,8 +208,8 @@ Roadmap: <title>
 └── Risks & Mitigations
 ```
 
-Every task carries a **Spec footprint** — the spec work it owns (`vibespec-update`
-for changed specs, `vibespec-create` for new ones or an ADR), or an explicit
+Every task carries a **Spec footprint** — the spec work it owns (`spec-update`
+for changed specs, `spec-create` for new ones or an ADR), or an explicit
 `none`. Never leave it blank.
 
 See `references/roadmap-format.md` for the full template with inline guidance, and
@@ -289,7 +289,7 @@ Each task runs the project's ordinary loop around the actual change:
 ```
    ┌────────────────┐
    │ consult specs  │  read the specs named in the task's Spec footprint
-   │ (vibespec-     │  plus their domain README; keep invariants visible
+   │ (spec-     │  plus their domain README; keep invariants visible
    │  consult)      │
    └───────┬────────┘
            ▼
@@ -298,8 +298,8 @@ Each task runs the project's ordinary loop around the actual change:
    └───────┬────────┘
            ▼
    ┌────────────────┐
-   │   sync specs   │  vibespec-update for changed specs;
-   │ (vibespec-     │  vibespec-create for new ones (or a new ADR)
+   │   sync specs   │  spec-update for changed specs;
+   │ (spec-     │  spec-create for new ones (or a new ADR)
    │  update/create)│
    └────────────────┘
 ```
@@ -319,8 +319,8 @@ quick check that nothing documented was affected.
 4. **Run the project's checks.** After each task (or at minimum after all tasks),
    run the project's lint, typecheck, and test commands. Discover them from
    `package.json`, `Makefile`, `AGENTS.md`, or ask the user.
-5. **Sync specs.** Update affected specs with `vibespec-update` and create new
-   ones with `vibespec-create`, per the task's Spec footprint. Never edit specs ad
+5. **Sync specs.** Update affected specs with `spec-update` and create new
+   ones with `spec-create`, per the task's Spec footprint. Never edit specs ad
    hoc inside a code change.
 6. **Follow existing conventions.** Mimic code style, reuse existing utilities and
    patterns. Do not introduce new dependencies or patterns unless the roadmap
@@ -382,8 +382,8 @@ Final checks:
   tests ✓ (or "not applicable")
 
 Spec sync:
-  updated:  [specs changed via vibespec-update]
-  created:  [specs or ADRs added via vibespec-create]
+  updated:  [specs changed via spec-update]
+  created:  [specs or ADRs added via spec-create]
   footprint left open: [any Spec footprint entries not yet satisfied, or "none"]
 
 Notes:
@@ -391,7 +391,7 @@ Notes:
 ───────────────────────────────────────────
 ```
 
-For broad or structural changes, suggest a `vibespec-check` pass to confirm the
+For broad or structural changes, suggest a `spec-check` pass to confirm the
 specs did not drift.
 
 ---
@@ -408,7 +408,7 @@ specs did not drift.
 
 ## Plan Mode
 - **Don't write code** — Plan Mode is read-only; design the plan, don't build it
-- **Don't skip the spec consult** — run `vibespec-consult` before finalizing
+- **Don't skip the spec consult** — run `spec-consult` before finalizing
 - **Don't skip the approval gate** — never enter Implementation Mode unapproved
 - **Don't lose decisions** — every Explore decision appears in *Decisions
   Recorded*; decisions meeting the ADR criteria are marked `→ ADR`
@@ -419,7 +419,7 @@ specs did not drift.
 ## Implementation Mode
 - **Don't improvise** — follow the approved roadmap
 - **Don't edit specs directly** — route every spec change through
-  `vibespec-update` or `vibespec-create`
+  `spec-update` or `spec-create`
 - **Don't skip verification** — acceptance criteria, project checks, and spec sync
 - **Don't expand scope** — implement what was approved; note the rest
 - **Do pause when the plan is broken** — returning to Plan Mode is correctness, not failure
@@ -433,15 +433,15 @@ specs did not drift.
 - **No `specs/` directory** — tell the user, then behave as plain `explore`. All
   spec-aware steps become no-ops; do not invent a spec system.
 - **Spec drift noticed mid-work** — note the discrepancy and mention that
-  `vibespec-check` can resolve it. Do NOT silently fix specs during an explore or
+  `spec-check` can resolve it. Do NOT silently fix specs during an explore or
   plan step.
 - **Planned change conflicts with an invariant** — stop and surface it in Plan
   Mode. Changing a documented invariant is a decision (and likely a new ADR), not
   a quiet workaround.
-- **`UNDOCUMENTED` area inside the roadmap** — give it a `vibespec-create` Spec
+- **`UNDOCUMENTED` area inside the roadmap** — give it a `spec-create` Spec
   footprint rather than leaving it uncovered.
 - **Stale `specs/INDEX.md`** — if the navigation table doesn't match the tree,
-  note it, proceed with the closest-matching specs, and suggest `vibespec-check`.
+  note it, proceed with the closest-matching specs, and suggest `spec-check`.
 
 ---
 

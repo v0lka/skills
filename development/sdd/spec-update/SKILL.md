@@ -1,5 +1,5 @@
 ---
-name: vibespec-update
+name: spec-update
 description: Update existing specification documents after code changes that alter documented behavior, interfaces, or invariants. Use after implementation when you have changed behavior covered by a spec, added/removed/renamed interfaces in a contract, modified architectural boundaries, or changed configuration. Ensures format preservation, cross-reference integrity, and INDEX.md currency.
 ---
 
@@ -35,7 +35,7 @@ Determine which specs need updating based on what you changed:
 | What you changed | Update |
 |-----------------|--------|
 | Component behavior | Domain detail file for that component |
-| New component in existing domain | Domain README (catalog/table) + new detail file (use `vibespec-create`) |
+| New component in existing domain | Domain README (catalog/table) + new detail file (use `spec-create`) |
 | Interface signatures | Contract spec for that boundary |
 | Initialization/wiring | Contract spec "Initialization" section |
 | Configuration parameters | Domain README "Configuration" section |
@@ -66,7 +66,7 @@ Read the entire spec before making any modifications. This is critical because:
 
 If your change contradicts an existing Architecture Decision Record:
 - Do NOT edit the accepted ADR
-- Create a new ADR that supersedes it (use `vibespec-create` skill)
+- Create a new ADR that supersedes it (use `spec-create` skill)
 - Update only the `## Status` line of the old ADR to: `Superseded by [NNN](./NNN-slug.md)`
 - This is the ONLY permitted edit to an accepted ADR
 

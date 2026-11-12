@@ -1,5 +1,5 @@
 ---
-name: vibespec-create
+name: spec-create
 description: Create a new specification document following the project's spec system templates and conventions. Use when adding a new domain, component, contract, architecture doc, or Architecture Decision Record (ADR). Ensures correct format, naming, placement, cross-references, and INDEX.md update.
 ---
 
@@ -194,7 +194,7 @@ What was evaluated and why it was rejected.
 
 **ADR-specific rules:**
 
-**The ADR bar test** (the same criteria as vibespec-init Step 8 and the WORKFLOW.md template):
+**The ADR bar test** (the same criteria as spec-init Step 8 and the WORKFLOW.md template):
 
 Create an ADR only if the decision meets BOTH:
 1. **Constrains work beyond the immediate change** — cross-domain, cross-cutting, or hard to reverse
