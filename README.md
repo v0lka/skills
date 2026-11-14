@@ -13,6 +13,7 @@ General-purpose research, paper study, and ideation skills. Each skill is indepe
 | [**deeper-research**](research/deeper-research/README.md) | Conduct thorough, multi-source research using Tree of Thoughts methodology. Produces cited, multi-perspective syntheses with confidence ratings and evidentiary hierarchy. |
 | [**explore**](research/explore/README.md)                 | Explore → Plan → Implement — a thinking partner for exploring ideas and clarifying requirements, then producing a structured roadmap (What/How/Where/Acceptance criteria) for approval, then implementing it. |
 | [**fordec-research**](research/fordec-research/SKILL.md) | Conduct rapid engineering R&D through iterative FORDEC cycles, competing hypotheses, and minimum viable experiments, with user input at every stage and user-controlled completion. |
+| [**it-news-digest**](research/it-news-digest/README.md)   | Compile a daily digest of the previous calendar day's major world IT news for engineers — primary-source verification, a 0–25 scoring rubric, and balanced coverage of AI, security, and developer tooling; artifacts are written in the user's request language. |
 | [**know-hower**](research/know-hower/README.md)           | Audit technical and domain know-how across a project, compare public analogues and direct publication, and produce an evidence-based report with a proposed `.aiignore` for manual review. |
 | [**scamper**](research/scamper/README.md)                 | Transform existing ideas into improved variants using the SCAMPER method (Substitute, Combine, Adapt, Modify, Put to other use, Eliminate, Reverse).                       |
 | [**study-paper**](research/study-paper/README.md) | Study, skim, critically appraise, reproduce, compare, and teach research papers, explicitly separating what a paper claims from what it demonstrates. |
@@ -60,12 +61,13 @@ Skills for text transformation and post-editing of AI-generated content.
 
 ### Development
 
-Skills for task prioritization, code review, specification-driven development, and writing secure, idiomatic, production-ready Go applications.
+Skills for task prioritization, code and architecture review, specification-driven development, and writing secure, idiomatic, production-ready Go applications.
 
 | Skill | Description |
 | ----- | ----------- |
 | [**vibe-brain**](development/vibe-brain/README.md) | Analyzes the project codebase, documentation, and memory to identify the single highest-priority task to work on right now. |
 | [**code-review**](development/code-review/README.md) | Comprehensive code review for evaluating code changes — identifies bugs, logic errors, security issues, structural problems, performance concerns, and unintended behavior changes. |
+| [**architecture-review**](development/architecture-review/README.md) | Evidence-based architecture review of whole projects, subsystems, or changes — reconstructs the real structure from code, then evaluates layering, dependency direction, boundaries, coupling, resilience, observability, security-by-design, and ADR governance. |
 
 #### Secure Go
 
