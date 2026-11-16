@@ -27,7 +27,7 @@ implementation.]
 [Mark with `→ ADR` any decision that meets the ADR bar: it constrains work beyond
 the immediate change AND had real alternatives considered and rejected, OR it
 contradicts/supersedes an existing ADR or documented invariant. Such decisions
-become Architecture Decision Records via `spec-create` after approval;
+become Architecture Decision Records via `vibespec-create` after approval;
 everything else stays in Decisions Recorded (and, if worth recording, belongs in
 a domain/architecture spec).]
 
@@ -96,9 +96,9 @@ spec work a task owns so that implementation does not leave specs behind.
 
 - **Every task has one** — use `none` explicitly when a task touches nothing
   documented; never leave it blank.
-- **Point at the skill, not just the file** — "update via `spec-update`" or
-  "create via `spec-create`".
+- **Point at the skill, not just the file** — "update via `vibespec-update`" or
+  "create via `vibespec-create`".
 - **Carry over `UNDOCUMENTED` findings** — an area flagged during exploration
-  becomes a `spec-create` footprint entry.
+  becomes a `vibespec-create` footprint entry.
 - **Surface ADRs** — decisions meeting the ADR bar, marked `→ ADR`, become
-  `spec-create` footprints too.
+  `vibespec-create` footprints too.

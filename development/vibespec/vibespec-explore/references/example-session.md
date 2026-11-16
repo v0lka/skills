@@ -4,7 +4,7 @@ A full spec-aware run: explore → plan → implement. The project has a `specs/
 directory. Illustrative of tone and flow, not a script.
 
 ```
-User: /spec-explore
+User: /vibespec-explore
       I'm not sure how to structure this new feature
 
 You: Let's think through it — and let's start from what the project already
@@ -84,7 +84,7 @@ You: ─────────────────────────
      Entering Plan Mode
      ───────────────────────────────────────────
 
-     [runs the spec-consult procedure for the areas the plan touches]
+     [runs the vibespec-consult procedure for the areas the plan touches]
 
      # Roadmap: Multi-format Data Export
 
@@ -242,6 +242,6 @@ You: Approved. One note: none of these decisions pass the ADR bar — they
        created:  specs/domains/export/ (README + 3 detail files)
        footprint left open: none
 
-     Suggested next: run spec-check to confirm the new specs match the code.
+     Suggested next: run vibespec-check to confirm the new specs match the code.
      ───────────────────────────────────────────
 ```

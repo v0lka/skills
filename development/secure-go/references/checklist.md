@@ -98,7 +98,7 @@ Comprehensive checklist for secure Go development, organized by OWASP Top 10 cat
 ## AI-Assisted Development (OWASP LLM Top 10 2025)
 
 - [ ] `AGENTS.md`/`SECURITY.md` pin security invariants of the project
-- [ ] Agent skills connected: secure-go, idiomatic-go, sdd, security-policy-generator
+- [ ] Agent skills connected: secure-go, idiomatic-go, vibespec, security-policy-generator
 - [ ] Spec-Driven Development: spec and tests — before code generation
 - [ ] Agent works in a sandbox; production secrets inaccessible
 - [ ] Tool permissions granted minimally

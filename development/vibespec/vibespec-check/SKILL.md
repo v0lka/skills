@@ -1,5 +1,5 @@
 ---
-name: spec-check
+name: vibespec-check
 description: Detect discrepancies between project specifications and actual code. Use when you suspect specs have drifted from implementation, after a major refactoring, during onboarding to verify spec accuracy, or on explicit user request. For each discrepancy found, interactively asks the user whether to trust the code, trust the spec, trust neither, or ignore.
 ---
 
@@ -98,7 +98,7 @@ Then ask the user to choose one of:
 
 After collecting all user decisions:
 
-- **Trust code** → invoke `spec-update` skill to update the spec
+- **Trust code** → invoke `vibespec-update` skill to update the spec
 - **Trust spec** → report the code locations that need fixing (do NOT modify code within this skill; the user decides when to fix)
 - **Trust neither** → summarize as an open question requiring design discussion
 - **Ignore** → skip silently
@@ -156,7 +156,7 @@ ADRs are historical records and generally don't drift. Check only:
 2. Referenced code/specs in Context/Decision — verify they still exist
 3. Duplicate numbers — scan the entire `specs/decisions/` tree for files sharing the same leading `NNN` (parse `NNN` from each `NNN-slug.md` filename and ignore the slug; include superseded ADRs — a retired record keeps its number). Report each contested number with its claimant files.
 
-**DUPLICATE_ADR_NUMBER resolution:** renumber the second-landed record to the next free number per the renumber protocol in `spec-create` — update all references (filename, `# ADR-NNN:` heading, supersede links, INDEX.md entries, cross-references in other specs) — then re-run the cross-reference check to catch links broken by the renumbering.
+**DUPLICATE_ADR_NUMBER resolution:** renumber the second-landed record to the next free number per the renumber protocol in `vibespec-create` — update all references (filename, `# ADR-NNN:` heading, supersede links, INDEX.md entries, cross-references in other specs) — then re-run the cross-reference check to catch links broken by the renumbering.
 
 ---
 

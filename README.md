@@ -75,16 +75,16 @@ Skills for task prioritization, code review, specification-driven development, a
 
 #### Specification-Driven Development
 
-Skills that implement a Specification-Driven Development workflow — from bootstrapping a spec system to keeping specs aligned with code. See [development/sdd/README.md](development/sdd/README.md) for the full workflow.
+Skills that implement a Specification-Driven Development workflow — from bootstrapping a spec system to keeping specs aligned with code. See [development/vibespec/README.md](development/vibespec/README.md) for the full workflow.
 
-| Skill                                                              | Description                                                                                                                     |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| [**spec-explore**](development/sdd/spec-explore/SKILL.md) | Spec-aware thinking partner: grounds exploration in the project's spec system, turns unclear requirements into an approved roadmap (What/How/Where/Spec footprint/Acceptance criteria), then implements it while keeping specs synchronized. |
-| [**spec-init**](development/sdd/spec-init/SKILL.md)       | Initialize a specification system for a project from scratch by analyzing the codebase and generating the initial set of specs. |
-| [**spec-create**](development/sdd/spec-create/SKILL.md)   | Create a new specification document following the project's spec system templates and conventions.                              |
-| [**spec-consult**](development/sdd/spec-consult/SKILL.md) | Proactively consult project specifications before making structural changes to avoid violating documented invariants.           |
-| [**spec-update**](development/sdd/spec-update/SKILL.md)   | Update existing specification documents after code changes that alter documented behavior, interfaces, or invariants.           |
-| [**spec-check**](development/sdd/spec-check/SKILL.md)     | Detect discrepancies between project specifications and actual code, interactively resolving each finding with the user.        |
+| Skill                                                                  | Description                                                                                                                       |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| [**vibespec-init**](development/vibespec/vibespec-init/SKILL.md)       | Initialize a specification system for a project from scratch by analyzing the codebase and generating the initial set of specs.   |
+| [**vibespec-explore**](development/vibespec/vibespec-explore/SKILL.md) | Spec-aware thinking partner: grounds exploration in the project's spec system, turns unclear requirements into an approved roadmap (What/How/Where/Spec footprint/Acceptance criteria), then implements it while keeping specs synchronized. |
+| [**vibespec-consult**](development/vibespec/vibespec-consult/SKILL.md) | Proactively consult project specifications before making structural changes to avoid violating documented invariants.             |
+| [**vibespec-update**](development/vibespec/vibespec-update/SKILL.md)   | Update existing specification documents after code changes that alter documented behavior, interfaces, or invariants.             |
+| [**vibespec-create**](development/vibespec/vibespec-create/SKILL.md)   | Create a new specification document following the project's spec system templates and conventions.                                |
+| [**vibespec-check**](development/vibespec/vibespec-check/SKILL.md)     | Detect discrepancies between project specifications and actual code, interactively resolving each finding with the user.          |
 
 #### Idiomatic Go
 

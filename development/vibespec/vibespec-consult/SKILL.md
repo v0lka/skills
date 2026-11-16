@@ -1,5 +1,5 @@
 ---
-name: spec-consult
+name: vibespec-consult
 description: Proactively consult project specifications before making structural changes. Use BEFORE modifying layer boundaries, adding/removing interfaces, changing architectural patterns, adding new components to existing domains, or any change that could violate documented invariants. This skill navigates the spec system to load relevant context.
 ---
 
@@ -74,12 +74,12 @@ After completing your changes, determine whether any spec needs updating:
 - Did you add a new component? → Update the domain README's catalog/table
 - Did you make a decision that constrains work beyond the immediate change AND had rejected alternatives, or that contradicts/supersedes a documented ADR or invariant? → Create an ADR; otherwise record the decision in the relevant domain/architecture spec
 
-If specs need updating, invoke the `spec-update` or `spec-create` skill as appropriate.
+If specs need updating, invoke the `vibespec-update` or `vibespec-create` skill as appropriate.
 
 ---
 
 ## Edge Cases
 
 - **No INDEX.md found**: Look for any navigation file or README in `specs/`. If nothing exists, report to the user.
-- **Spec seems outdated**: Note the discrepancy but do NOT silently fix it during a code change task. Mention it to the user — they may want to invoke `spec-check`.
+- **Spec seems outdated**: Note the discrepancy but do NOT silently fix it during a code change task. Mention it to the user — they may want to invoke `vibespec-check`.
 - **Task doesn't match any INDEX entry**: Read the most closely related domain README. If truly no spec covers your area, mention this to the user — a new spec may be needed.

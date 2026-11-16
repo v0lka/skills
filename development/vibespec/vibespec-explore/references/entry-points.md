@@ -105,7 +105,7 @@ You: [reads specs first: specs/domains/*/README.md for the request flow,
 
 **Spec-aware move:** the documented flow is your reference model. If the spec
 claims a step that the code skips (or vice versa), that is drift — note it and
-suggest `spec-check`, but do not fix it during exploration. If the spec says
+suggest `vibespec-check`, but do not fix it during exploration. If the spec says
 "the request path issues a single query", the N+1 above is a documented-invariant
 violation, which is a stronger finding than "slow".
 

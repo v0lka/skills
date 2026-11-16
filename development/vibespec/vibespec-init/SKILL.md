@@ -1,5 +1,5 @@
 ---
-name: spec-init
+name: vibespec-init
 description: >-
   Initialize a specification system for a project from scratch. Analyzes the
   codebase to identify architectural layers, domains, boundaries, and key
@@ -146,7 +146,7 @@ For each identified boundary between layers/modules:
 
 Create `decisions/_template.md` from `assets/adr-template.md`.
 
-Generate ADRs only for decisions that pass the ADR bar — the same test `spec-create` applies:
+Generate ADRs only for decisions that pass the ADR bar — the same test `vibespec-create` applies:
 - **Constrains work beyond the immediate change** (cross-domain, cross-cutting, or hard to reverse) **AND had real alternatives considered and rejected**
 - If `Alternatives Considered` cannot be filled honestly, it is not an ADR — record the decision in the relevant domain or architecture spec instead
 - At bootstrap the supersedes branch of the bar cannot apply — the spec tree starts empty
@@ -221,5 +221,5 @@ Total files: N
 - **Accuracy over completeness**: it's better to generate fewer specs with correct content than many specs with guesses. If unsure about behavior, mark with `<!-- TODO: verify -->` and note it in the summary.
 - **Derive from code, don't invent**: every claim in a spec must be traceable to actual code. Read the source before writing about it.
 - **Respect domain boundaries**: one source file may participate in multiple domains. Assign it to the domain where its primary responsibility lies.
-- **Start lean**: generate only specs for areas with clear, documentable behavior. Thin areas can be added later via `spec-create`.
+- **Start lean**: generate only specs for areas with clear, documentable behavior. Thin areas can be added later via `vibespec-create`.
 - **Ask when unsure**: if the codebase has ambiguous boundaries or unclear patterns, ask the user rather than guessing.
