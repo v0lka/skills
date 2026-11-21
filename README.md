@@ -67,6 +67,7 @@ Skills for task prioritization, code review, specification-driven development, a
 | ----- | ----------- |
 | [**vibe-brain**](development/vibe-brain/README.md) | Analyzes the project codebase, documentation, and memory to identify the single highest-priority task to work on right now. |
 | [**code-review**](development/code-review/README.md) | Comprehensive code review for evaluating code changes — identifies bugs, logic errors, security issues, structural problems, performance concerns, and unintended behavior changes. |
+| [**performance-review**](development/performance-review/README.md) | Performance-focused code review of changes or explicit scopes — detects N+1 queries, chatty I/O, blocking calls, quadratic complexity, leaks, lock contention, and retry storms; ties each finding to its workload condition and the measurement that confirms it. |
 
 #### Secure Go
 
