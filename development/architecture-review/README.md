@@ -1,6 +1,6 @@
 # Architecture Review
 
-A standalone [Agent Skill](https://agentskills.io/specification) for evidence-based architecture reviews. It reconstructs the *real* architecture of a codebase from code — not from documentation claims — and evaluates it for structural health: layering, dependency direction, module boundaries, coupling balance (integration strength, distance, volatility), resilience, observability, and security-by-design.
+A standalone [Agent Skill](https://agentskills.io/specification) for evidence-based architecture reviews. It reconstructs the *real* architecture of a codebase from code and evaluates it for structural health: layering, dependency direction, module boundaries, coupling balance (integration strength, distance, volatility), resilience, observability, and security-by-design.
 
 ## When to use
 
