@@ -40,7 +40,7 @@ Skills for building and maintaining AI agent systems.
 
 | Skill                                                 | Description                                                                                                                                                          |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**prompts-review**](agentic/prompts-review/README.md) | Review all prompts in a codebase for optimality, balancing effectiveness and token efficiency. Covers explicit, string-literal, and dynamically constructed prompts. |
+| [**prompts-review**](agentic/prompts-review/README.md) | Review all prompts in a codebase — explicit, string-literal, and dynamically constructed — and report prioritized findings without rewriting anything; applies fixes and improves a single user-supplied prompt only on request. |
 | [**skill-create**](agentic/skill-create/README.md)     | Create a new Agent Skill from a user-provided description, asking clarifying questions when it is underspecified, and validate the result against the spec before delivery.   |
 
 ### Security
