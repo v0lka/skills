@@ -125,6 +125,10 @@ npx skills add v0lka/skills --skill <skill-name> --full-depth
 
 To use a skill manually, reference the agent skills [documentation](https://agentskills.io) or load it via your AI agent interface.
 
+## Authors
+
+Created by [Vladimir Kochetkov](https://github.com/v0lka). The [architecture-review](development/architecture-review/README.md) skill is co-authored with Radda Yureva.
+
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.

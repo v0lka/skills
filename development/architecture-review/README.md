@@ -53,6 +53,10 @@ The skill is agent-agnostic. It requires read access to a codebase (directory li
 
 The skill follows the [Agent Skills specification v1](https://agentskills.io/specification).
 
+## Authors
+
+Created by [Vladimir Kochetkov](https://github.com/v0lka). Co-authored with Radda Yureva.
+
 ## License
 
 MIT
