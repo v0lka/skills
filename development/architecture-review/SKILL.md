@@ -1,6 +1,6 @@
 ---
 name: architecture-review
-description: Evidence-based architecture review of a whole project, a subsystem, or a change (uncommitted changes, commit, branch, or pull request). Reconstructs the real structure of a codebase from code, then evaluates layering, dependency direction, module boundaries, coupling and cohesion, framework-driven design, resilience, observability, and security-by-design. Use when assessing overall design health, reviewing structural changes, planning a refactor or migration, or onboarding into an unfamiliar codebase.
+description: Evidence-based architecture review of a whole project, a subsystem, or a change (uncommitted changes, commit, branch, or pull request). Reconstructs the real structure of a codebase from code, then evaluates layering, dependency direction, module boundaries, balanced coupling (integration strength, distance, volatility, connascence), framework-driven design, resilience, observability, and security-by-design. Use when assessing overall design health, reviewing structural changes, planning a refactor or migration, or onboarding into an unfamiliar codebase.
 license: MIT
 compatibility: Requires read access to a codebase (directory listing, file reading, content search). Git is required for change-based scopes (commits, branches, pull requests).
 ---
@@ -29,7 +29,7 @@ Use best judgement when interpreting the input. When the intent is ambiguous bet
 A diff tells you *what* changed, not *what it means structurally*. For any change scope:
 
 - Read the **entire modified files** — not just the diff hunks — plus the modules immediately around them.
-- Ask which structural properties the change touches: dependency direction, layer boundaries, module coupling, public API surface, error and configuration boundaries, resilience of new external calls, security boundaries.
+- Ask which structural properties the change touches: dependency direction, layer boundaries, module coupling (its strength, distance, and connascence), public API surface, error and configuration boundaries, resilience of new external calls, security boundaries.
 - Judge impact, not size: a 20-line change deserves an architecture review if it makes domain code import a database driver.
 - Do not re-review untouched code except as the context needed to judge the change.
 
@@ -70,6 +70,16 @@ Primary reference: [structure and boundaries](references/structure-and-boundarie
 - Business logic depending directly on concrete infrastructure — no abstractions, hard to test
 - Temporal coupling; global state and hidden side effects
 - Inconsistent error boundaries; configuration leakage; poor API design
+
+### Coupling and modularization
+
+Primary reference: [coupling and modularization](references/coupling-modularization.md)
+
+- Cross-boundary dependencies classified by integration strength (intrusive / functional / model / contract); high strength with long distance — distributed-monolith shape, low strength at short distance — unnecessary abstraction
+- Connascence crossing module boundaries: magic values (CoM), positional parameters (CoP), duplicated algorithms (CoA), call-order dependencies (CoE), hidden shared instances (CoI)
+- Volatility mismatches — volatile core-subdomain knowledge coupled strongly across long distances; low-volatility exceptions verified and excused
+- Metrics out of healthy range: CBO > 14, instability index in the 0.3–0.7 "zone of pain" for frequently-changing modules
+- Synchronized deployments, shared domain models across services, and other evidence that modules cannot evolve independently
 
 ### Operational qualities
 
@@ -117,7 +127,7 @@ Primary reference: [decision records](references/decision-records.md)
 ```
 [A-#] [SEVERITY] — one-line summary
 
-**Area:** structure | resilience | observability | security | governance
+**Area:** structure | coupling | resilience | observability | security | governance
 **Evidence:** path/to/file.py:42-58 — short excerpt or precise description
 **Why it matters:** the concrete consequence — what breaks, what gets harder, and when
 **Recommendation:** the actionable fix; include a migration step when the fix is invasive
@@ -130,9 +140,10 @@ Deliver a self-contained Markdown report with these sections:
 1. **Scope and method** — what was reviewed, at what depth, and how coverage was achieved (modules inspected vs. skipped).
 2. **Architecture summary** — the real architecture as observed: style (layered, hexagonal, modular monolith, …), the major modules, and how they interact.
 3. **Layer/module map** — detected layers or modules with their dependency directions; mark cycles and direction violations directly on the map.
-4. **Findings** — ordered by severity, in the finding format above.
-5. **Recommendations** — a prioritized, actionable list; break larger refactors into sequenced steps.
-6. **Not confirmed / coverage notes** — checks you could not complete and what would be needed to complete them.
+4. **Coupling and modularization** — the balance assessment: for each significant cross-boundary dependency pair, its integration strength, distance, and volatility with the balance verdict; note the pairs excused by low volatility.
+5. **Findings** — ordered by severity, in the finding format above.
+6. **Recommendations** — a prioritized, actionable list; break larger refactors into sequenced steps.
+7. **Not confirmed / coverage notes** — checks you could not complete and what would be needed to complete them.
 
 For change scopes, add an **Architectural impact** section right after the summary: which structural properties the change touches, and whether it strengthens or degrades them.
 

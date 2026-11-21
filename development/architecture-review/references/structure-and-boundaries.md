@@ -165,6 +165,8 @@ Remediation:
 3. Keep configuration (DSNs, hosts, credentials) in the configuration layer, injected as values — never read from arbitrary layers.
 4. Verify testability: each business-logic unit should be testable with fakes for its interfaces.
 
+For classifying the *strength* of a dependency (intrusive / functional / model / contract), judging it against distance and volatility, and connascence-based analysis, continue with [coupling and modularization](coupling-modularization.md).
+
 ## Cross-cutting structural smells
 
 Quick checks for the remaining structural smells — each is a finding only with concrete evidence:
